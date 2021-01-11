@@ -9,6 +9,7 @@ import dev.entao.views.*
 import dev.entao.log.logd
 import dev.entao.theme.ColorX
 import dev.entao.appbase.TimeDown
+import java.io.FileReader
 
 
 fun Snackbar.config() {
@@ -65,10 +66,10 @@ class TestPage : LinearPage() {
         titleBar {
             title("Hello")
             text("开始") {
-                TimeDown.start("edPhone", 10)
+                hello2()
             }
-            text("取消") {
-                TimeDown.cancel("edPhone")
+            text("Hello") {
+                hello()
             }
         }
 
@@ -79,6 +80,16 @@ class TestPage : LinearPage() {
 
     }
 
+    private fun hello() {
+        val fr = FileReader("/proc/tty/drivers")
+        logd("\n",fr.readText())
+        fr.close()
+    }
+    private fun hello2() {
+        val fr = FileReader("/proc/driver/camera_info")
+        logd("\n",fr.readText())
+        fr.close()
+    }
     override fun onMsg(msg: Msg) {
         if (msg.isMsg(TimeDown.MSG_TIME_DOWN)) {
             logd(msg.s1, msg.n1)

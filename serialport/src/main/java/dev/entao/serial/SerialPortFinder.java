@@ -1,20 +1,6 @@
-/*
- * Copyright 2009 Cedric Priscal
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License. 
- */
 
-package android.serialport;
+
+package dev.entao.serial;
 
 import android.util.Log;
 import java.io.File;
@@ -24,6 +10,17 @@ import java.io.LineNumberReader;
 import java.util.Iterator;
 import java.util.Vector;
 
+//      /dev/tty             /dev/tty        5       0 system:/dev/tty
+//      /dev/console         /dev/console    5       1 system:console
+//      /dev/ptmx            /dev/ptmx       5       2 system
+//      rfcomm               /dev/rfcomm   216 0-255 serial
+//      g_serial             /dev/ttyGS    230 0-3 serial
+//      usbserial            /dev/ttyUSB   188 0-253 serial
+//      acm                  /dev/ttyACM   166 0-31 serial
+//      smd_tty_driver       /dev/smd      239 0-36 serial
+//      msm_serial_hs        /dev/ttyHS    240 0-255 serial
+//      pty_slave            /dev/pts      136 0-1048575 pty:slave
+//      pty_master           /dev/ptm      128 0-1048575 pty:master
 public class SerialPortFinder {
 
     public class Driver {
