@@ -1,7 +1,8 @@
-package dev.entao.ui.util.app
+package dev.entao.other
 
 import android.content.Intent
 import dev.entao.appbase.IdGen
+import dev.entao.appbase.PowerLock
 import dev.entao.appbase.RunTask
 import dev.entao.appbase.TaskQueue
 import dev.entao.log.logd

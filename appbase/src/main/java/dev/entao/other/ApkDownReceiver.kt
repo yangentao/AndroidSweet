@@ -1,4 +1,4 @@
-package dev.entao.ui.util.app
+package dev.entao.other
 
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
@@ -32,11 +32,11 @@ class ApkDownReceiver : BroadcastReceiver() {
         private var downReceiver: ApkDownReceiver? = null
 
         private fun regDownRecv() {
-            if (this.downReceiver != null) {
+            if (downReceiver != null) {
                 return
             }
             val d = ApkDownReceiver()
-            this.downReceiver = d
+            downReceiver = d
             App.inst.registerReceiver(d, IntentFilter("android.intent.action.DOWNLOAD_COMPLETE"))
         }
 
@@ -66,7 +66,7 @@ class ApkDownReceiver : BroadcastReceiver() {
             val downId = App.downloadManager.enqueue(req)
             logd("DownloadTask enqueue: ", downId)
             downMap.put(downId.toString(), url)
-            this.regDownRecv()
+            regDownRecv()
 
         }
 

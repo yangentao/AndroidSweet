@@ -1,7 +1,8 @@
-package dev.entao.ui.util.app
+package dev.entao.other
 
 import android.app.Service
 import android.content.Intent
+import dev.entao.appbase.PowerLock
 
 /**
  * onStartCommand返回 START_STICKY, 这个值可以改写

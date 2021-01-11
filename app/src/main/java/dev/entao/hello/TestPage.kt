@@ -1,18 +1,14 @@
 package dev.entao.hello
 
-import android.content.Context
-import android.graphics.Color
-import android.view.KeyEvent
-import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import androidx.appcompat.widget.AppCompatTextView
 import com.google.android.material.snackbar.Snackbar
 import dev.entao.appbase.*
 import dev.entao.page.LinearPage
 import dev.entao.views.*
 import dev.entao.log.logd
 import dev.entao.theme.ColorX
+import dev.entao.appbase.TimeDown
 
 
 fun Snackbar.config() {
@@ -68,56 +64,25 @@ class TestPage : LinearPage() {
         super.onCreateContent(contentView)
         titleBar {
             title("Hello")
-            text("前进") {
+            text("开始") {
+                TimeDown.start("edPhone", 10)
             }
-            text("后退") {
-
-            }
-            text("Dialog") {
-                snackShow("Hello")
+            text("取消") {
+                TimeDown.cancel("edPhone")
             }
         }
 
 
         contentView.apply {
-            gridViewCheck {
-                linearParams {
-                    fill
-                }
-                val lv = this
-                setItems(items)
-                callback = object : GridCallback {
-                    override fun onNewView(context: Context, position: Int): View {
-                        val v = super.onNewView(context, position) as AppCompatTextView
-                        v.topImage = R.mipmap.reg_ent.resDrawable.sized(40)
-                            .tintedList(Color.LTGRAY, ColorX.redLight)
-                        v.imagePadding = 0
-                        v.layoutParams = Params.list.widthFill.heightWrap
-                        return v
-                    }
-                }
-                checkCallback = object : ItemCheckCallback {
-                    override fun onCheckChanged(item: Any) {
-                        logd(lv.checkedItems)
-                    }
 
-                    override fun onItemCheckable(item: Any): Boolean {
-                        return item != "A"
-                    }
-                }
-
-            }
         }
 
     }
 
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-
-        return super.onKeyDown(keyCode, event)
+    override fun onMsg(msg: Msg) {
+        if (msg.isMsg(TimeDown.MSG_TIME_DOWN)) {
+            logd(msg.s1, msg.n1)
+        }
+        super.onMsg(msg)
     }
 }

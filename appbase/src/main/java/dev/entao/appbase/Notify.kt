@@ -1,18 +1,20 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
-package dev.entao.ui.util.app
+package dev.entao.appbase
 
 import android.app.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import dev.entao.json.YsonObject
-import dev.entao.appbase.App
-import dev.entao.appbase.IntentHelper
-import dev.entao.appbase.ResUri
-import dev.entao.appbase.resBitmap
+import dev.entao.base.yson
+import dev.entao.pages.YetApp
 
 /**
  * 图标默认是应用程序图标
@@ -27,13 +29,11 @@ class Notify(val id: Int) {
 
     var defaults: Int = 0
 
-    var channel: NotificationChannel? = null
+    val channelId = App.packageName + "$id"
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(App.packageName + "$id", "yet$id", NotificationManager.IMPORTANCE_DEFAULT)
-            channel = ch
-            builder = NotificationCompat.Builder(App.inst, App.packageName + "$id")
+            builder = NotificationCompat.Builder(App.inst, channelId)
         } else {
             @Suppress("DEPRECATION")
             builder = NotificationCompat.Builder(App.inst)
@@ -109,7 +109,13 @@ class Notify(val id: Int) {
      * 点击时打开Activity
      */
     fun clickActivity(cls: Class<out Activity>, yo: YsonObject): Notify {
-        builder.setContentIntent(IntentHelper.pendingActivity(cls, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.setContentIntent(
+            IntentHelper.pendingActivity(
+                cls,
+                PendingIntent.FLAG_UPDATE_CURRENT,
+                yo
+            )
+        )
         return this
     }
 
@@ -117,7 +123,13 @@ class Notify(val id: Int) {
      * 点击时发出广播
      */
     fun clickBroadcast(action: String, yo: YsonObject): Notify {
-        builder.setContentIntent(IntentHelper.pendingBroadcastApp(action, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.setContentIntent(
+            IntentHelper.pendingBroadcastApp(
+                action,
+                PendingIntent.FLAG_UPDATE_CURRENT,
+                yo
+            )
+        )
         return this
     }
 
@@ -131,7 +143,13 @@ class Notify(val id: Int) {
      * 点击时启动Service
      */
     fun clickService(cls: Class<out Service>, yo: YsonObject): Notify {
-        builder.setContentIntent(IntentHelper.pendingService(cls, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.setContentIntent(
+            IntentHelper.pendingService(
+                cls,
+                PendingIntent.FLAG_UPDATE_CURRENT,
+                yo
+            )
+        )
         return this
     }
 
@@ -139,7 +157,13 @@ class Notify(val id: Int) {
      * 清除时启动Activity
      */
     fun deleteActivity(cls: Class<out Activity>, yo: YsonObject): Notify {
-        builder.setDeleteIntent(IntentHelper.pendingActivity(cls, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.setDeleteIntent(
+            IntentHelper.pendingActivity(
+                cls,
+                PendingIntent.FLAG_UPDATE_CURRENT,
+                yo
+            )
+        )
         return this
     }
 
@@ -147,7 +171,13 @@ class Notify(val id: Int) {
      * 清除时发广播
      */
     fun deleteBroadcast(action: String, yo: YsonObject): Notify {
-        builder.setDeleteIntent(IntentHelper.pendingBroadcastApp(action, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.setDeleteIntent(
+            IntentHelper.pendingBroadcastApp(
+                action,
+                PendingIntent.FLAG_UPDATE_CURRENT,
+                yo
+            )
+        )
         return this
     }
 
@@ -156,7 +186,13 @@ class Notify(val id: Int) {
      */
     fun deleteService(cls: Class<out Service>, yo: YsonObject): Notify {
 
-        builder.setDeleteIntent(IntentHelper.pendingService(cls, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.setDeleteIntent(
+            IntentHelper.pendingService(
+                cls,
+                PendingIntent.FLAG_UPDATE_CURRENT,
+                yo
+            )
+        )
         return this
     }
 
@@ -164,7 +200,11 @@ class Notify(val id: Int) {
      * 点击按钮时 打开Activity
      */
     fun actionActivity(icon: Int, title: String, cls: Class<out Activity>, yo: YsonObject): Notify {
-        builder.addAction(icon, title, IntentHelper.pendingActivity(cls, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.addAction(
+            icon,
+            title,
+            IntentHelper.pendingActivity(cls, PendingIntent.FLAG_UPDATE_CURRENT, yo)
+        )
         return this
     }
 
@@ -172,7 +212,11 @@ class Notify(val id: Int) {
      * 点击按钮时发广播
      */
     fun actionBroadcast(icon: Int, title: String, action: String, yo: YsonObject): Notify {
-        builder.addAction(icon, title, IntentHelper.pendingBroadcastApp(action, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.addAction(
+            icon,
+            title,
+            IntentHelper.pendingBroadcastApp(action, PendingIntent.FLAG_UPDATE_CURRENT, yo)
+        )
         return this
     }
 
@@ -180,7 +224,11 @@ class Notify(val id: Int) {
      * 点击按钮时启动Service
      */
     fun actionService(icon: Int, title: String, cls: Class<out Service>, yo: YsonObject): Notify {
-        builder.addAction(icon, title, IntentHelper.pendingService(cls, PendingIntent.FLAG_UPDATE_CURRENT, yo))
+        builder.addAction(
+            icon,
+            title,
+            IntentHelper.pendingService(cls, PendingIntent.FLAG_UPDATE_CURRENT, yo)
+        )
         return this
     }
 
@@ -253,16 +301,13 @@ class Notify(val id: Int) {
     @Suppress("DEPRECATION")
     fun build(): Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = channel
-            if (ch != null) {
-                NotificationManagerCompat.from(App.inst).createNotificationChannel(ch)
-            }
+            val ch = NotificationChannel(channelId, "yet$id", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationManagerCompat.from(App.inst).createNotificationChannel(ch)
         }
         if (defaults != 0) {
             builder.setDefaults(defaults)
         }
-        val n = builder.build()
-        return n
+        return builder.build()
     }
 
     companion object {
@@ -273,4 +318,27 @@ class Notify(val id: Int) {
             NotificationManagerCompat.from(App.inst).cancel(id)
         }
     }
+}
+
+
+class NotifyReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent) {
+        val yo = intent.yson ?: return
+        val yetApp = App.inst as? YetApp
+        yetApp?.onNotifyClick(yo)
+    }
+
+    companion object {
+        private var nr: NotifyReceiver? = null
+        fun reg() {
+            if (nr != null) {
+                return
+            }
+            val r = NotifyReceiver()
+            nr = r
+            val a = IntentFilter()
+            App.inst.registerReceiver(r, a)
+        }
+    }
+
 }

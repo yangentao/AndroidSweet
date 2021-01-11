@@ -1,4 +1,4 @@
-package dev.entao.ui.util.app
+package dev.entao.other
 
 import android.app.Service
 import android.content.Intent

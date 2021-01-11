@@ -1,4 +1,4 @@
-package dev.entao.ui.util.app
+package dev.entao.appbase
 
 import android.os.PowerManager
 import dev.entao.appbase.App
