@@ -92,6 +92,5 @@ dependencies {
 
 //    api project(':ui')
     api project(':appbase')
-    api project(':serialport')
 
 }

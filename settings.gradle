@@ -2,4 +2,4 @@ rootProject.name = "AndroidSweet"
 
 
 include ':app', ':appbase'
-include ':serialport'
+//include ':serialport'
