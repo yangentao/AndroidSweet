@@ -1,0 +1,6 @@
+<resources>
+
+    <dimen name="textTitle">18sp</dimen>
+    <dimen name="textPrimary">16sp</dimen>
+    <dimen name="textSecondary">14sp</dimen>
+</resources>

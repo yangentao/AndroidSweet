@@ -1,0 +1,97 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+android {
+    compileSdkVersion Integer.parseInt(project.COMPILE_SDK_VERSION)
+    buildToolsVersion "30.0.2"
+
+    defaultConfig {
+        applicationId "dev.entao.hello"
+        minSdkVersion Integer.parseInt(project.MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(project.TARGET_SDK_VERSION)
+        versionCode 1
+        versionName "1.0"
+
+        archivesBaseName = "Hello-" + versionCode
+
+//        manifestPlaceholders = ['BAIDU_LOC_KEY': 'dayw6FP4oFHMEkOUXx1WkkXsUjWTZ57p']
+
+        ndk {
+            abiFilters 'armeabi'
+        }
+
+    }
+    signingConfigs {
+        yet {
+            storeFile file('yet.key')
+            keyAlias = YET_NAME
+            storePassword YET_PWD
+            keyPassword YET_PWD
+        }
+    }
+    buildTypes {
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.yet
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            multiDexEnabled true
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.yet
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.6'
+    }
+//    flavorDimensions 'channel'
+//    productFlavors {
+//        huawei {
+//            dimension 'channel'
+//            applicationId "dev.entao.hello.huawei"
+//            versionCode 100
+//            versionName '1.0.0'
+//            manifestPlaceholders = ['BAIDU_LOC_KEY': 'dayw6FP4oFHMEkOUXx1WkkXsUjWTZ57p']
+//        }
+//        tencent {
+//            dimension 'channel'
+//            applicationId "dev.entao.hello.tencent"
+//            versionCode 100
+//            versionName '1.0.0'
+//            manifestPlaceholders = ['BAIDU_LOC_KEY': '6sIWBKikUzop79T6CI972rZAvaxdGsxW']
+//        }
+//
+//    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'com.google.zxing:core:3.4.1'
+    testImplementation 'junit:junit:4.13.1'
+    api 'androidx.core:core-ktx:1.3.2'
+    api 'androidx.appcompat:appcompat:1.2.0'
+    api 'com.google.android.material:material:1.2.1'
+    api 'androidx.constraintlayout:constraintlayout:2.0.4'
+    api 'androidx.navigation:navigation-fragment-ktx:2.3.2'
+    api 'androidx.navigation:navigation-ui-ktx:2.3.2'
+
+
+    api 'androidx.camera:camera-core:1.0.0-beta12'
+    api 'androidx.camera:camera-camera2:1.0.0-beta12'
+    api "androidx.camera:camera-lifecycle:1.0.0-beta12"
+    api "androidx.camera:camera-view:1.0.0-alpha19"
+    api "androidx.camera:camera-extensions:1.0.0-alpha19"
+
+    api project(':ui')
+    api project(':appbase')
+    api project(':serialport')
+
+}

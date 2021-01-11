@@ -1,0 +1,5 @@
+rootProject.name = "AndroidSweet"
+
+
+include ':app', ':appbase', ':ui'
+include ':serialport'

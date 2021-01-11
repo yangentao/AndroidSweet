@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="YetTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowAnimationStyle">@style/YetTrans</item>
+    </style>
+    <style name="YetTrans">
+        <item name="android:activityOpenEnterAnimation">@anim/yet_enter_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/yet_exit_alpha</item>
+        <item name="android:activityCloseEnterAnimation">@anim/yet_enter_alpha</item>
+        <item name="android:activityCloseExitAnimation">@anim/yet_exit_right</item>
+
+        <!--<item name="android:taskOpenEnterAnimation">@anim/yet_enter_alpha</item>-->
+        <!--<item name="android:taskOpenExitAnimation">@anim/yet_exit_alpha</item>-->
+        <!--<item name="android:taskCloseEnterAnimation">@anim/yet_enter_alpha</item>-->
+        <!--<item name="android:taskCloseExitAnimation">@anim/yet_exit_alpha</item>-->
+
+        <!--<item name="android:taskToFrontEnterAnimation">@anim/yet_enter_alpha</item>-->
+        <!--<item name="android:taskToFrontExitAnimation">@anim/yet_exit_alpha</item>-->
+        <!--<item name="android:taskToBackEnterAnimation">@anim/yet_enter_alpha</item>-->
+        <!--<item name="android:taskToBackExitAnimation">@anim/yet_exit_alpha</item>-->
+
+        <item name="android:windowEnterAnimation">@anim/yet_enter_alpha</item>
+        <item name="android:windowExitAnimation">@anim/yet_exit_alpha</item>
+
+    </style>
+
+</resources>

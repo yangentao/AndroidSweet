@@ -1,0 +1,70 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'maven'
+
+
+group = 'dev.entao.kan'
+
+android {
+    compileSdkVersion Integer.parseInt(project.COMPILE_SDK_VERSION)
+
+    resourcePrefix "yet"
+
+    defaultConfig {
+        minSdkVersion Integer.parseInt(project.MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(project.TARGET_SDK_VERSION)
+        versionCode 621
+        versionName "6.2.1"
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    testImplementation 'junit:junit:4.13.1'
+    api 'com.google.android.material:material:1.2.1'
+    api 'androidx.cardview:cardview:1.0.0'
+    api 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    api 'androidx.viewpager2:viewpager2:1.0.0'
+    api 'androidx.constraintlayout:constraintlayout:2.0.4'
+
+
+    api project(':appbase')
+
+
+}
+
+task androidSourcesJar(type: Jar) {
+    archiveClassifier.set('sources')
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives androidSourcesJar
+}
+
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: 'http://maven.app800.cn/repository/public/') {
+//                authentication(userName: ARCHIVA_USERNAME, password: ARCHIVA_PASSWORD)
+            }
+            pom.project {
+                artifactId = "ui"
+                groupId = project.group
+                version = android.defaultConfig.versionName
+                packaging = 'aar'
+            }
+
+        }
+    }
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="pageBackground">#FF000000</color>
+    <color name="textPrimary">#FFEEEEEE</color>
+    <color name="textSecondary">#FF666666</color>
+    <color name="divider">#FF333333</color>
+    <color name="dialogBackground">#FF202020</color>
+    <color name="titleBar">@color/pageBackground</color>
+    <color name="fadeColor">@color/divider</color>
+    <color name="dialogTitleBar">@color/dialogBackground</color>
+    <color name="textTitle">#FFFFFFFF</color>
+
+    <color name="editBorder">#FF444444</color>
+    <color name="editBorderFocus">#AA228822</color>
+</resources>
