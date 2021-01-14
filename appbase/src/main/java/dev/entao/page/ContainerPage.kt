@@ -105,7 +105,7 @@ class ContainerPage : Page() {
         return super.onBackPressed()
     }
 
-    override fun onAttach(pm: PageManager) {
+    override fun onAttach(pm: PageContainer) {
         super.onAttach(pm)
         frameLayout = FrameLayout(context)
         this.pageView.addView(frameLayout, Params.relative.fill)

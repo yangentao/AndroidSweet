@@ -25,7 +25,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
 
     //即使当前页已经finish, 也要保持pageManager的引用, 因为可能会调用当前页面的pushPage方法.
     //并不会造成内存泄漏问题,
-    lateinit var pageManager: PageManager
+    lateinit var pageManager: PageContainer
     val context: Context get() = pageManager.activity
     val activity: PageActivity get() = pageManager.activity
 
@@ -72,10 +72,6 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
     }
 
     open fun onAttach(pm: PageContainer) {
-
-    }
-
-    open fun onAttach(pm: PageManager) {
         this.pageManager = pm
         pageView = RelativeLayout(this.context).apply {
             backColorWhite()
@@ -139,7 +135,6 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
         if (this === source) {
-            logd("PageState: ", pageName, pageId, event)
             when (event) {
                 Lifecycle.Event.ON_CREATE -> {
                     onCreate(this.pageView)

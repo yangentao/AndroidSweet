@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
 package dev.entao.page
 
@@ -7,33 +7,15 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
 import android.widget.FrameLayout
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import dev.entao.base.top
-import dev.entao.pages.hideInputMethod
-import dev.entao.views.FrameParams
-import dev.entao.views.onClick
 import dev.entao.log.logd
-import dev.entao.log.loge
 import dev.entao.views.beginAnimation
-import java.util.*
 
-//为什么重新发明轮子?
-//为什么不使用Activity, Activity传递对象类型的参数和回调很困难
-//为什么不使用Fragment, Fragment的onPause在当前Fragment被其他Fragmeng覆盖时不会被调用,它的状态跟Activity同步
-//为什么不使用navigation-fragmen包, 同上两条
 
-typealias LifeState = Lifecycle.State
-typealias LifeEvent = Lifecycle.Event
 
-class PageManager(val activity: PageActivity, private val frameLayout: FrameLayout) : LifecycleEventObserver {
+class PageManager(activity: PageActivity, frameLayout: FrameLayout) : PageContainer(activity, activity, frameLayout) {
 
-    private val pageStack: Stack<Page> = Stack()
-    val pageCount: Int get() = pageStack.size
-    val topPage: Page? get() = pageStack.top()
-    val bottomPage: Page? get() = pageStack.firstOrNull()
+
 
     var animDuration: Long = 200
 
@@ -49,155 +31,35 @@ class PageManager(val activity: PageActivity, private val frameLayout: FrameLayo
     //被新页面覆盖
     var pauseAnim: Animation? = alphaOutAnim
 
-    private var ignoreAnim = false
 
-    init {
-        activity.lifecycle.addObserver(this)
+    override fun onPageAnimEnter(oldView: View, curView: View) {
+        this.enterAnim?.also {
+            it.duration = animDuration
+            curView.beginAnimation(it) {}
+        }
+        this.pauseAnim?.also {
+            it.duration = animDuration
+            oldView.beginAnimation(it) {}
+        }
     }
 
-    fun setContentPage(p: Page) {
-        ignoreAnim = true
-        while (!pageStack.empty()) {
-            popPage()
-        }
-        pushPage(p)
-        ignoreAnim = false
-    }
-
-
-    fun pushPage(page: Page) {
-        if (activity.lifecycle.currentState == Lifecycle.State.DESTROYED) {
-            loge("Activity Already Destroyed! Cannot Push Any Page. ", page::class.qualifiedName)
-            return
-        }
-        if (pageStack.contains(page)) {
-            return
-        }
-        pageStack.top()?.also { tp ->
-            tp.pageView.animation?.cancel()
-            when (tp.lifecycleRegistry.currentState) {
-                Lifecycle.State.STARTED, Lifecycle.State.RESUMED -> {
-                    tp.currentState = Lifecycle.State.CREATED
-                }
-                else -> {
-                }
+    override fun onPageAnimLeave(oldView: View, curView: View, onOldViewAnimEnd: (View) -> Unit) {
+        this.leaveAnim?.also { am ->
+            am.duration = animDuration
+            logd("begin Anim")
+            oldView.beginAnimation(am) {
+                logd("end Anim")
+                onOldViewAnimEnd(oldView)
             }
         }
-        logd(page.pageName, "push to Stack ")
-        pageStack.push(page)
-        page.onAttach(this)
-        page.lifecycle.addObserver(this)
-        page.currentState = activity.lifecycle.currentState
-    }
+        this.resumeAnim?.also { ra ->
+            ra.duration = animDuration
+            curView.beginAnimation(ra) {
 
-    //只保留栈底
-    fun popToBottom() {
-        ignoreAnim = true
-        while (pageStack.size > 1) {
-            val p = pageStack.pop()
-            finishPage(p)
-        }
-        ignoreAnim = false
-    }
-
-    fun popPage() {
-        val p = pageStack.top() ?: return
-        finishPage(p)
-
-    }
-
-    fun finishPage(p: Page) {
-        logd("finishPage: ", p.pageName)
-        p.pageView.animation?.cancel()
-        p.lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
-    }
-
-
-    private fun pageOnCreated(p: Page) {
-        if (p.pageView.layoutParams is FrameParams) {
-            frameLayout.addView(p.pageView)
-        } else {
-            frameLayout.addView(p.pageView, FrameParams.MATCH_PARENT, FrameParams.MATCH_PARENT)
-        }
-        if (!ignoreAnim && pageStack.top() == p && pageStack.size > 1) {
-            this.enterAnim?.also {
-                it.duration = animDuration
-                p.pageView.beginAnimation(it) {}
-            }
-            this.pauseAnim?.also {
-                it.duration = animDuration
-                pageStack[pageStack.size - 2].pageView.beginAnimation(it) {}
             }
         }
     }
 
-    private fun afterPageDestroyed(p: Page) {
-        frameLayout.removeView(p.pageView)
-        p.onDetach()
-        pageStack.top()?.currentState = activity.lifecycle.currentState
-    }
-
-    private fun pageOnDestroyed(p: Page) {
-        p.lifecycle.removeObserver(this)
-        val isTopPage = p === pageStack.top()
-        pageStack.remove(p)
-        if (!ignoreAnim && isTopPage && pageStack.isNotEmpty() && this.leaveAnim != null) {
-            this.leaveAnim?.also { am ->
-                am.duration = animDuration
-                logd("begin Anim")
-                p.pageView.beginAnimation(am) {
-                    logd("end Anim")
-                    afterPageDestroyed(p)
-                }
-            }
-
-            this.resumeAnim?.also { ra ->
-                pageStack.top()?.also {
-                    ra.duration = animDuration
-                    it.pageView.beginAnimation(ra) {}
-                }
-
-            }
-        } else {
-            afterPageDestroyed(p)
-        }
-    }
-
-
-    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        if (source is AppCompatActivity) {
-            when (event) {
-                Lifecycle.Event.ON_CREATE -> {
-                    pageStack.forEach {
-                        it.lifecycleRegistry.handleLifecycleEvent(event)
-                    }
-                }
-                Lifecycle.Event.ON_DESTROY -> {
-                    pageStack.reversed().forEach {
-                        it.lifecycleRegistry.handleLifecycleEvent(event)
-                    }
-                }
-                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME, Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    pageStack.top()?.lifecycleRegistry?.handleLifecycleEvent(event)
-                }
-                Lifecycle.Event.ON_ANY -> {
-
-                }
-            }
-        } else if (source is Page) {
-            when (event) {
-                Lifecycle.Event.ON_CREATE -> {
-                    pageOnCreated(source)
-                }
-                Lifecycle.Event.ON_DESTROY -> {
-                    pageOnDestroyed(source)
-                }
-                else -> {
-                }
-            }
-        }
-
-    }
 
     companion object {
         val rightInAnim: Animation

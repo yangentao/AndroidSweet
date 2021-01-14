@@ -11,33 +11,43 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import dev.entao.log.logd
 import dev.entao.views.FrameParams
 import java.util.*
 import kotlin.collections.ArrayList
 
-open class PageContainer(val activity: PageActivity, val containerLifecycle: Lifecycle, val frameLayout: FrameLayout) {
+
+typealias LifeState = Lifecycle.State
+typealias LifeEvent = Lifecycle.Event
+
+open class PageContainer(val activity: PageActivity, val lifecycleOwner: LifecycleOwner, val frameLayout: FrameLayout) {
 
     protected val pageQueue: ArrayList<Page> = ArrayList()
     val pageCount: Int get() = pageQueue.size
+
+    val topPage: Page? get() = pageQueue.lastOrNull()
+    val bottomPage: Page? get() = pageQueue.firstOrNull()
 
     var currentPage: Page? = null
         set(value) {
             val old = field
             if (old != value) {
-                if (value !in pageQueue) error("没有被添加")
+                if (value != null && value !in pageQueue) error("没有被添加:" + value.pageName)
                 field = value
                 onCurrentPageChanged(old, value)
             }
         }
 
+    private val ownerState: LifeState get() = lifecycleOwner.lifecycle.currentState
 
-    protected var ignoreAnim = false
+
+    private var ignoreAnim = false
 
     private val lifeObserver = LifecycleEventObserver { source, event -> this@PageContainer.onStateChanged(source, event) }
 
 
     init {
-        containerLifecycle.addObserver(lifeObserver)
+        lifecycleOwner.lifecycle.addObserver(lifeObserver)
     }
 
     fun getPage(index: Int): Page {
@@ -48,24 +58,35 @@ open class PageContainer(val activity: PageActivity, val containerLifecycle: Lif
         if (oldPage in pageQueue) {
             oldPage?.currentState = LifeState.CREATED
         }
-        newPage?.currentState = containerLifecycle.currentState
-        if (ignoreAnim) return
+        logd("Container State: ", ownerState)
+        if (ownerState.isAtLeast(LifeState.CREATED)) {
+            newPage?.currentState = ownerState
+        } else {
+            newPage?.currentState = LifeState.CREATED
+        }
+        if (ignoreAnim || !ownerState.isAtLeast(LifeState.STARTED)) return
         val oldView: View = oldPage?.pageView ?: return
         val newView: View = newPage?.pageView ?: return
         val isLeave = oldPage !in pageQueue
-        onPageAnim(oldView, newView, isLeave) {
-            if (isLeave) {
-                frameLayout.removeView(oldView)
+        if (isLeave) {
+            onPageAnimLeave(oldView, newView) {
+                frameLayout.removeView(it)
             }
+        } else {
+            onPageAnimEnter(oldView, newView)
         }
     }
 
-    protected open fun onPageAnim(oldView: View, curView: View, isLeave: Boolean, onAnimEnd: () -> Unit) {
-        onAnimEnd()
+    protected open fun onPageAnimEnter(oldView: View, curView: View) {
+
+    }
+
+    protected open fun onPageAnimLeave(oldView: View, curView: View, onOldViewAnimEnd: (View) -> Unit) {
+        onOldViewAnimEnd(oldView)
     }
 
     fun addPage(page: Page) {
-        if (containerLifecycle.currentState == Lifecycle.State.DESTROYED) {
+        if (ownerState == Lifecycle.State.DESTROYED) {
             error("Activity Already Destroyed! Cannot Push Any Page. " + page::class.qualifiedName)
         }
         if (pageQueue.contains(page)) {
@@ -75,6 +96,8 @@ open class PageContainer(val activity: PageActivity, val containerLifecycle: Lif
         page.lifecycle.addObserver(this.lifeObserver)
         page.onAttach(this)
         page.currentState = LifeState.CREATED
+        logd("PageAdded:", page.pageName)
+        logd("PageQueue: ", pageQueue.joinToString(",") { it.pageName })
     }
 
 
@@ -141,7 +164,8 @@ open class PageContainer(val activity: PageActivity, val containerLifecycle: Lif
     }
 
     protected open fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        if (source is AppCompatActivity) {
+        logd(source::class.simpleName + " StateChanged:", source.lifecycle.currentState, event)
+        if (source === lifecycleOwner) {
             when (event) {
                 Lifecycle.Event.ON_CREATE -> {
                     pageQueue.forEach {

@@ -9,6 +9,7 @@ import dev.entao.views.*
 import dev.entao.log.logd
 import dev.entao.theme.ColorX
 import dev.entao.appbase.TimeDown
+import dev.entao.page.toast
 import java.io.FileReader
 
 
@@ -42,7 +43,8 @@ class TestPage : LinearPage() {
         titleBar {
             title("Hello")
             text("开始") {
-                hello2()
+//                hello2()
+                toast("Hello Yang")
             }
             text("Hello") {
                 hello()
