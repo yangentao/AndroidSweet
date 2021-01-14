@@ -8,7 +8,7 @@ import dev.entao.views.FrameLayout
 
 open class PageActivity : BaseActivity() {
 
-    lateinit var pageManager: PageManager
+    lateinit var pageManager: StackPageContainer
     lateinit var containerFrameLayout: FrameLayout
         private set
 
@@ -25,7 +25,7 @@ open class PageActivity : BaseActivity() {
             fitsSystemWindows = true
         }
         setContentView(containerFrameLayout)
-        pageManager = PageManager(this, containerFrameLayout)
+        pageManager = StackPageContainer(this, containerFrameLayout)
         val p = getInitPage()
         if (p != null) {
             pageManager.pushPage(p)

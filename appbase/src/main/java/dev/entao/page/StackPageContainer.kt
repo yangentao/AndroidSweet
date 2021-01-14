@@ -12,7 +12,7 @@ import dev.entao.log.logd
 import dev.entao.views.beginAnimation
 
 
-class PageManager(activity: PageActivity, frameLayout: FrameLayout) : PageContainer(activity, activity, frameLayout) {
+class StackPageContainer(activity: PageActivity, frameLayout: FrameLayout) : PageContainer(activity, activity, frameLayout) {
 
 
     var animDuration: Long = 500

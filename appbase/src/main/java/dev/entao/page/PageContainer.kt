@@ -20,9 +20,9 @@ import kotlin.collections.ArrayList
 typealias LifeState = Lifecycle.State
 typealias LifeEvent = Lifecycle.Event
 
-open class PageContainer(val activity: PageActivity, val lifecycleOwner: LifecycleOwner, val frameLayout: FrameLayout) {
+open class PageContainer(val activity: PageActivity, private val lifecycleOwner: LifecycleOwner, private val frameLayout: FrameLayout) {
 
-    protected val pageQueue: ArrayList<Page> = ArrayList()
+    private val pageQueue: ArrayList<Page> = ArrayList()
     val pageCount: Int get() = pageQueue.size
 
     val topPage: Page? get() = pageQueue.lastOrNull()
@@ -203,7 +203,7 @@ open class PageContainer(val activity: PageActivity, val lifecycleOwner: Lifecyc
                         val newCurr = onCurrentFinished(oldIndex)
                         pageQueue.remove(p)
                         if (currentPage == newCurr) {
-                            frameLayout.removeView(p.pageView)
+                            frameLayout.removeView(p.pageView)//not reach!
                         } else {
                             currentPage = newCurr
                         }
@@ -225,34 +225,6 @@ open class PageContainer(val activity: PageActivity, val lifecycleOwner: Lifecyc
         }
 
     }
-
-    companion object {
-        val rightInAnim: Animation
-            get() = TranslateAnimation(
-                Animation.RELATIVE_TO_PARENT, 1f, Animation.RELATIVE_TO_PARENT, 0f,
-                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 0f,
-            ).apply {
-                this.fillBefore = true
-            }
-        val rightOutAnim: Animation
-            get() = TranslateAnimation(
-                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 1f,
-                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 0f,
-            ).apply {
-                this.fillAfter = true
-            }
-
-        val alphaInAnim: Animation
-            get() = AlphaAnimation(0.2f, 1.0f).apply {
-                this.fillBefore = true
-            }
-        val alphaOutAnim: Animation
-            get() = AlphaAnimation(1f, 0.2f).apply {
-                this.fillBefore = true
-            }
-
-    }
-
 
 }
 
