@@ -41,19 +41,19 @@ class TestPage : LinearPage() {
     override fun onCreateContent(contentView: LinearLayout) {
         super.onCreateContent(contentView)
         titleBar {
-            title("Hello")
+            title("Test")
             text("开始") {
 //                hello2()
                 toast("Hello Yang")
             }
             text("Hello") {
-                hello()
+                pushPage(TestPage2())
             }
         }
 
 
         contentView.apply {
-
+            backColor(ColorX.cyanDark)
         }
 
     }

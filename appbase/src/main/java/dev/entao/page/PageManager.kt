@@ -12,12 +12,10 @@ import dev.entao.log.logd
 import dev.entao.views.beginAnimation
 
 
-
 class PageManager(activity: PageActivity, frameLayout: FrameLayout) : PageContainer(activity, activity, frameLayout) {
 
 
-
-    var animDuration: Long = 200
+    var animDuration: Long = 500
 
     //新页面进入,顶部,入栈
     var enterAnim: Animation? = rightInAnim
@@ -78,11 +76,11 @@ class PageManager(activity: PageActivity, frameLayout: FrameLayout) : PageContai
             }
 
         val alphaInAnim: Animation
-            get() = AlphaAnimation(0.2f, 1.0f).apply {
+            get() = AlphaAnimation(0.3f, 1.0f).apply {
                 this.fillBefore = true
             }
         val alphaOutAnim: Animation
-            get() = AlphaAnimation(1f, 0.2f).apply {
+            get() = AlphaAnimation(1f, 0.3f).apply {
                 this.fillBefore = true
             }
 
