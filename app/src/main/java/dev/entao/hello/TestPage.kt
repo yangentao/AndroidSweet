@@ -35,31 +35,7 @@ fun TestPage.snackShow(text: String, actionText: String, block: () -> Unit) {
 }
 
 class TestPage : LinearPage() {
-    var items = listOf(
-        "A",
-        "B",
-        "C",
-        "D",
-        "E",
-        "F",
-        "G",
-        "H",
-        "I",
-        "J",
-        "K",
-        "L",
-        "M",
-        "N",
-        "O",
-        "P",
-        "Q",
-        "R",
-        "S",
-        "T",
-        "U",
-        "V",
-        "W"
-    )
+    var items = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W")
     var items2 = listOf("A", "B", "C", "D", "E")
     override fun onCreateContent(contentView: LinearLayout) {
         super.onCreateContent(contentView)
@@ -82,14 +58,16 @@ class TestPage : LinearPage() {
 
     private fun hello() {
         val fr = FileReader("/proc/tty/drivers")
-        logd("\n",fr.readText())
+        logd("\n", fr.readText())
         fr.close()
     }
+
     private fun hello2() {
         val fr = FileReader("/proc/driver/camera_info")
-        logd("\n",fr.readText())
+        logd("\n", fr.readText())
         fr.close()
     }
+
     override fun onMsg(msg: Msg) {
         if (msg.isMsg(TimeDown.MSG_TIME_DOWN)) {
             logd(msg.s1, msg.n1)

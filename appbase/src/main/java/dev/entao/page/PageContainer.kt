@@ -2,6 +2,7 @@
 
 package dev.entao.page
 
+import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
@@ -43,11 +44,24 @@ open class PageContainer(val activity: PageActivity, val containerLifecycle: Lif
         return pageQueue[index]
     }
 
-    private fun onCurrentPageChanged(oldPage: Page?, newPage: Page?) {
+    protected open fun onCurrentPageChanged(oldPage: Page?, newPage: Page?) {
         if (oldPage in pageQueue) {
             oldPage?.currentState = LifeState.CREATED
         }
         newPage?.currentState = containerLifecycle.currentState
+        if (ignoreAnim) return
+        val oldView: View = oldPage?.pageView ?: return
+        val newView: View = newPage?.pageView ?: return
+        val isLeave = oldPage !in pageQueue
+        onPageAnim(oldView, newView, isLeave) {
+            if (isLeave) {
+                frameLayout.removeView(oldView)
+            }
+        }
+    }
+
+    protected open fun onPageAnim(oldView: View, curView: View, isLeave: Boolean, onAnimEnd: () -> Unit) {
+        onAnimEnd()
     }
 
     fun addPage(page: Page) {
@@ -126,15 +140,6 @@ open class PageContainer(val activity: PageActivity, val containerLifecycle: Lif
         return null
     }
 
-    protected open fun onPageCreateAnim(page: Page) {
-
-    }
-
-    protected open fun onPageDestroyAnim(page: Page, onAnimEnd: (Page) -> Unit) {
-        onAnimEnd(page)
-    }
-
-
     protected open fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
         if (source is AppCompatActivity) {
             when (event) {
@@ -164,32 +169,31 @@ open class PageContainer(val activity: PageActivity, val containerLifecycle: Lif
                     } else {
                         frameLayout.addView(p.pageView, FrameParams.MATCH_PARENT, FrameParams.MATCH_PARENT)
                     }
-                    if (!ignoreAnim) {
-                        onPageCreateAnim(p)
-                    }
+
                 }
                 Lifecycle.Event.ON_DESTROY -> {
                     p.lifecycle.removeObserver(lifeObserver)
                     p.onDetach()
-                    if (p === currentPage) {
+                    if (p == currentPage) {
                         val oldIndex = pageQueue.indexOf(p)
-                        currentPage = onCurrentFinished(oldIndex)
-                    }
-                    pageQueue.remove(p)
-                    when {
-                        pageQueue.isEmpty() -> {
+                        val newCurr = onCurrentFinished(oldIndex)
+                        pageQueue.remove(p)
+                        if (currentPage == newCurr) {
                             frameLayout.removeView(p.pageView)
+                        } else {
+                            currentPage = newCurr
+                        }
+                        if (pageQueue.isEmpty()) {
                             onPageQueueEmpty()
                         }
-                        ignoreAnim -> {
-                            frameLayout.removeView(p.pageView)
-                        }
-                        else -> {
-                            onPageDestroyAnim(p) {
-                                frameLayout.removeView(it.pageView)
-                            }
+                    } else {
+                        pageQueue.remove(p)
+                        frameLayout.removeView(p.pageView)
+                        if (pageQueue.isEmpty()) {
+                            onPageQueueEmpty()
                         }
                     }
+
                 }
                 else -> {
                 }
