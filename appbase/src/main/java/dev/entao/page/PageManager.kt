@@ -11,17 +11,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import dev.entao.base.top
 import dev.entao.pages.hideInputMethod
 import dev.entao.views.FrameParams
 import dev.entao.views.onClick
 import dev.entao.log.logd
 import dev.entao.log.loge
+import dev.entao.views.beginAnimation
 import java.util.*
 
 //为什么重新发明轮子?
 //为什么不使用Activity, Activity传递对象类型的参数和回调很困难
 //为什么不使用Fragment, Fragment的onPause在当前Fragment被其他Fragmeng覆盖时不会被调用,它的状态跟Activity同步
 //为什么不使用navigation-fragmen包, 同上两条
+
+typealias LifeState = Lifecycle.State
+typealias LifeEvent = Lifecycle.Event
+
 class PageManager(val activity: PageActivity, private val frameLayout: FrameLayout) : LifecycleEventObserver {
 
     private val pageStack: Stack<Page> = Stack()
@@ -71,7 +77,7 @@ class PageManager(val activity: PageActivity, private val frameLayout: FrameLayo
             tp.pageView.animation?.cancel()
             when (tp.lifecycleRegistry.currentState) {
                 Lifecycle.State.STARTED, Lifecycle.State.RESUMED -> {
-                    tp.lifecycleRegistry.currentState = Lifecycle.State.CREATED
+                    tp.currentState = Lifecycle.State.CREATED
                 }
                 else -> {
                 }
@@ -80,7 +86,8 @@ class PageManager(val activity: PageActivity, private val frameLayout: FrameLayo
         logd(page.pageName, "push to Stack ")
         pageStack.push(page)
         page.onAttach(this)
-        page.lifecycleRegistry.currentState = activity.lifecycle.currentState
+        page.lifecycle.addObserver(this)
+        page.currentState = activity.lifecycle.currentState
     }
 
     //只保留栈底
@@ -106,16 +113,7 @@ class PageManager(val activity: PageActivity, private val frameLayout: FrameLayo
     }
 
 
-    internal fun onPageViewCreated(p: Page) {
-        p.pageView.apply {
-            isClickable = true
-            isFocusable = true
-            isFocusableInTouchMode = true
-            onClick {
-                activity.hideInputMethod()
-            }
-        }
-
+    private fun pageOnCreated(p: Page) {
         if (p.pageView.layoutParams is FrameParams) {
             frameLayout.addView(p.pageView)
         } else {
@@ -136,12 +134,11 @@ class PageManager(val activity: PageActivity, private val frameLayout: FrameLayo
     private fun afterPageDestroyed(p: Page) {
         frameLayout.removeView(p.pageView)
         p.onDetach()
-        pageStack.top()?.lifecycleRegistry?.currentState = activity.lifecycle.currentState
+        pageStack.top()?.currentState = activity.lifecycle.currentState
     }
 
-    internal fun onPageDestroyed(p: Page) {
+    private fun pageOnDestroyed(p: Page) {
         p.lifecycle.removeObserver(this)
-        logd(p.pageName, "remove from Stack")
         val isTopPage = p === pageStack.top()
         pageStack.remove(p)
         if (!ignoreAnim && isTopPage && pageStack.isNotEmpty() && this.leaveAnim != null) {
@@ -177,16 +174,25 @@ class PageManager(val activity: PageActivity, private val frameLayout: FrameLayo
                 }
                 Lifecycle.Event.ON_DESTROY -> {
                     pageStack.reversed().forEach {
-                        it.lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                        it.lifecycleRegistry.handleLifecycleEvent(event)
                     }
                 }
                 Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME, Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
                     pageStack.top()?.lifecycleRegistry?.handleLifecycleEvent(event)
                 }
-
-
                 Lifecycle.Event.ON_ANY -> {
 
+                }
+            }
+        } else if (source is Page) {
+            when (event) {
+                Lifecycle.Event.ON_CREATE -> {
+                    pageOnCreated(source)
+                }
+                Lifecycle.Event.ON_DESTROY -> {
+                    pageOnDestroyed(source)
+                }
+                else -> {
                 }
             }
         }
@@ -223,28 +229,3 @@ class PageManager(val activity: PageActivity, private val frameLayout: FrameLayo
 
 }
 
-fun <T : Any> Stack<T>.top(): T? {
-    return this.lastOrNull()
-}
-
-fun <T : Any> Stack<T>.popOrNull(): T? {
-    return this.removeLastOrNull()
-}
-
-fun View.beginAnimation(animation: Animation, onEndCallback: () -> Unit) {
-    this.animation?.cancel()
-    animation.setAnimationListener(object : Animation.AnimationListener {
-        override fun onAnimationStart(animation: Animation?) {
-
-        }
-
-        override fun onAnimationEnd(animation: Animation?) {
-            onEndCallback()
-        }
-
-        override fun onAnimationRepeat(animation: Animation?) {
-        }
-
-    })
-    this.startAnimation(animation)
-}

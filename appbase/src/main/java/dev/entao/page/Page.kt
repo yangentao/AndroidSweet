@@ -10,11 +10,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import dev.entao.log.logd
+import dev.entao.pages.hideInputMethod
 import dev.entao.views.backColorWhite
+import dev.entao.views.onClick
 
 abstract class Page : LifecycleOwner, LifecycleEventObserver {
     val pageId: Int = currentPageId_++
-    val pageName: String = this::class.simpleName + "_$pageId" // for debug only
+    val pageName: String = this::class.qualifiedName + "@$pageId" // for debug only
     lateinit var pageView: RelativeLayout
 
     internal val lifecycleRegistry: LifecycleRegistry by lazy { LifecycleRegistry(this) }
@@ -26,7 +29,14 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
     val context: Context get() = pageManager.activity
     val activity: PageActivity get() = pageManager.activity
 
-    val currentState: Lifecycle.State get() = this.lifecycleRegistry.currentState
+    var attached: Boolean = false
+        private set
+
+    var currentState: Lifecycle.State
+        get() = this.lifecycleRegistry.currentState
+        internal set(value) {
+            this.lifecycleRegistry.currentState = value
+        }
 
     val isResumed: Boolean
         get() = currentState.isAtLeast(Lifecycle.State.RESUMED)
@@ -53,7 +63,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
         pageManager.pushPage(p)
     }
 
-    fun finishPage() {
+    open fun finishPage() {
         pageManager.finishPage(this)
     }
 
@@ -61,18 +71,31 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
         return false
     }
 
-    fun onAttach(pm: PageManager) {
-//        logd(pageName, ".ON_ATTACH")
-        this.pageManager = pm
-        lifecycleRegistry.addObserver(this)
-        pageView = RelativeLayout(this.context).apply {
-            backColorWhite()
-        }
+    open fun onAttach(pm: PageContainer) {
+
     }
 
-    fun onDetach() {
+    open fun onAttach(pm: PageManager) {
+        this.pageManager = pm
+        pageView = RelativeLayout(this.context).apply {
+            backColorWhite()
+            isClickable = true
+            isFocusable = true
+            isFocusableInTouchMode = true
+            setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    activity.hideInputMethod()
+                }
+            }
+        }
+        attached = true
+        lifecycleRegistry.addObserver(this)
+    }
+
+    open fun onDetach() {
 //        logd(pageName, ".ON_DETACH")
         lifecycleRegistry.removeObserver(this)
+        attached = false
 
     }
 
@@ -116,35 +139,27 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
         if (this === source) {
-//            logd("PageState: ", pageId, event)
+            logd("PageState: ", pageName, pageId, event)
             when (event) {
                 Lifecycle.Event.ON_CREATE -> {
-//                    logd(pageName, ".ON_CREATE")
                     onCreate(this.pageView)
-                    pageManager.onPageViewCreated(this)
                     onPageCreated()
                 }
                 Lifecycle.Event.ON_START -> {
-//                    logd(pageName, ".ON_START")
                     onStart()
                 }
                 Lifecycle.Event.ON_RESUME -> {
-//                    logd(pageName, ".ON_RESUME")
                     onResume()
                 }
                 Lifecycle.Event.ON_PAUSE -> {
-//                    logd(pageName, ".ON_PAUSE")
                     onPause()
                 }
                 Lifecycle.Event.ON_STOP -> {
-//                    logd(pageName, ".ON_STOP")
                     onStop()
                 }
                 Lifecycle.Event.ON_DESTROY -> {
-//                    logd(pageName, ".ON_DESTROY")
                     onDestroy()
                     lifecycleRegistry.removeObserver(this)
-                    pageManager.onPageDestroyed(this)
                 }
                 Lifecycle.Event.ON_ANY -> {
 
@@ -153,9 +168,18 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
         }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (other is Page) {
+            return this.pageId == other.pageId
+        }
+        return false
+    }
+
+    override fun hashCode(): Int {
+        return this.pageId
+    }
+
     companion object {
         private var currentPageId_: Int = 1
     }
-
-
 }

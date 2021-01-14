@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
+import android.view.animation.Animation
 import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.DrawableRes
@@ -343,3 +344,21 @@ fun <T : View> T.outlineRoundRect(corner: Int): T {
     return this
 }
 
+
+fun View.beginAnimation(animation: Animation, onEndCallback: () -> Unit) {
+    this.animation?.cancel()
+    animation.setAnimationListener(object : Animation.AnimationListener {
+        override fun onAnimationStart(animation: Animation?) {
+
+        }
+
+        override fun onAnimationEnd(animation: Animation?) {
+            onEndCallback()
+        }
+
+        override fun onAnimationRepeat(animation: Animation?) {
+        }
+
+    })
+    this.startAnimation(animation)
+}
