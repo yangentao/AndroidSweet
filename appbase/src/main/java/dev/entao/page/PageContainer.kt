@@ -55,25 +55,43 @@ open class PageContainer(val activity: PageActivity, private val lifecycleOwner:
     }
 
     protected open fun onCurrentPageChanged(oldPage: Page?, newPage: Page?) {
-        if (oldPage in pageQueue) {
-            oldPage?.currentState = LifeState.CREATED
-        }
-        logd("Container State: ", ownerState)
-        if (ownerState.isAtLeast(LifeState.CREATED)) {
-            newPage?.currentState = ownerState
-        } else {
-            newPage?.currentState = LifeState.CREATED
-        }
-        if (ignoreAnim || !ownerState.isAtLeast(LifeState.STARTED)) return
-        val oldView: View = oldPage?.pageView ?: return
-        val newView: View = newPage?.pageView ?: return
-        val isLeave = oldPage !in pageQueue
-        if (isLeave) {
-            onPageAnimLeave(oldView, newView) {
-                frameLayout.removeView(it)
+        if (oldPage == null) {
+            if (newPage == null) {
+                return
+            } else {
+                newPage.currentState = ownerState
             }
         } else {
-            onPageAnimEnter(oldView, newView)
+            val oldInQueue = oldPage in pageQueue
+            if (oldInQueue) {
+                if (ownerState.isAtLeast(LifeState.CREATED)) {
+                    oldPage.currentState = LifeState.CREATED
+                } else {
+                    oldPage.currentState = ownerState  //init or destroyed
+                }
+                if (newPage == null) {
+                    return
+                } else {
+                    newPage.currentState = ownerState
+                    if (!ignoreAnim && ownerState.isAtLeast(LifeState.STARTED)) {
+                        onPageAnimEnter(oldPage.pageView, newPage.pageView)
+                    }
+                }
+            } else {
+                if (newPage == null) {
+                    frameLayout.removeView(oldPage.pageView)
+                } else {
+                    newPage.currentState = ownerState
+                    if (!ignoreAnim && ownerState.isAtLeast(LifeState.STARTED)) {
+                        onPageAnimLeave(oldPage.pageView, newPage.pageView) {
+                            frameLayout.removeView(it)
+                        }
+                    } else {
+                        frameLayout.removeView(oldPage.pageView)
+                    }
+                }
+            }
+
         }
     }
 
@@ -95,7 +113,7 @@ open class PageContainer(val activity: PageActivity, private val lifecycleOwner:
         pageQueue.add(page)
         page.lifecycle.addObserver(this.lifeObserver)
         page.onAttach(this)
-        page.currentState = LifeState.CREATED
+        page.currentState = LifeState.INITIALIZED
         logd("PageAdded:", page.pageName)
         logd("PageQueue: ", pageQueue.joinToString(",") { it.pageName })
     }
