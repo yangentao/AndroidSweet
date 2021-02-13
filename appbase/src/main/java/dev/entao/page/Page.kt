@@ -13,7 +13,9 @@ import androidx.lifecycle.LifecycleRegistry
 import dev.entao.log.logd
 import dev.entao.pages.hideInputMethod
 import dev.entao.views.backColorWhite
+import dev.entao.views.gone
 import dev.entao.views.onClick
+import dev.entao.views.visiable
 
 abstract class Page : LifecycleOwner, LifecycleEventObserver {
     val pageId: Int = currentPageId_++
@@ -27,7 +29,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
     //并不会造成内存泄漏问题,
     lateinit var pageManager: PageContainer
     val context: Context get() = pageManager.activity
-    val activity: PageActivity get() = pageManager.activity
+    val activity: BaseActivity get() = pageManager.activity
 
     var attached: Boolean = false
         private set
@@ -78,6 +80,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
             isClickable = true
             isFocusable = true
             isFocusableInTouchMode = true
+            gone()
             setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
                     activity.hideInputMethod()
@@ -141,6 +144,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
                     onPageCreated()
                 }
                 Lifecycle.Event.ON_START -> {
+                    this.pageView.visiable()
                     onStart()
                 }
                 Lifecycle.Event.ON_RESUME -> {
@@ -151,6 +155,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
                 }
                 Lifecycle.Event.ON_STOP -> {
                     onStop()
+                    this.pageView.gone()
                 }
                 Lifecycle.Event.ON_DESTROY -> {
                     onDestroy()

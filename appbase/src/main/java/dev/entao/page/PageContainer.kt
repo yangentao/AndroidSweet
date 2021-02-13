@@ -13,6 +13,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import dev.entao.log.logd
 import dev.entao.views.FrameParams
+import dev.entao.views.gone
+import dev.entao.views.visiable
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -20,7 +22,7 @@ import kotlin.collections.ArrayList
 typealias LifeState = Lifecycle.State
 typealias LifeEvent = Lifecycle.Event
 
-open class PageContainer(val activity: PageActivity, private val lifecycleOwner: LifecycleOwner, private val frameLayout: FrameLayout) {
+open class PageContainer(val activity: BaseActivity, private val lifecycleOwner: LifecycleOwner, private val frameLayout: FrameLayout) {
 
     private val pageQueue: ArrayList<Page> = ArrayList()
     val pageCount: Int get() = pageQueue.size
@@ -28,12 +30,18 @@ open class PageContainer(val activity: PageActivity, private val lifecycleOwner:
     val topPage: Page? get() = pageQueue.lastOrNull()
     val bottomPage: Page? get() = pageQueue.firstOrNull()
 
+    protected var onlyCurrentVisible: Boolean = false
+
     var currentPage: Page? = null
         set(value) {
             val old = field
-            if (old != value) {
+            if (old !== value) {
                 if (value != null && value !in pageQueue) error("没有被添加:" + value.pageName)
                 field = value
+                if (onlyCurrentVisible) {
+//                    old?.pageView?.gone()
+//                    value?.pageView?.visiable()
+                }
                 onCurrentPageChanged(old, value)
             }
         }
