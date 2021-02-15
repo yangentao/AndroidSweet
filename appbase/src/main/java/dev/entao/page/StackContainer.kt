@@ -13,10 +13,10 @@ import dev.entao.log.logd
 import dev.entao.views.FrameParams
 import dev.entao.views.beginAnimation
 
-open class StackContainer(val activity: BaseActivity, private val lifecycleOwner: LifecycleOwner, private val frameLayout: FrameLayout) {
-
+open class StackContainer(val activity: StackActivity, private val frameLayout: FrameLayout) {
     private val pageQueue: ArrayList<Page> = ArrayList()
     val pageCount: Int get() = pageQueue.size
+    val lifecycleOwner: LifecycleOwner = activity
 
     val topPage: Page? get() = pageQueue.lastOrNull()
     val bottomPage: Page? get() = pageQueue.firstOrNull()

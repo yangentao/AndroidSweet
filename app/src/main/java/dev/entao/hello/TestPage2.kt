@@ -1,6 +1,7 @@
 package dev.entao.hello
 
 import android.widget.LinearLayout
+import dev.entao.log.logd
 import dev.entao.page.LinearPage
 import dev.entao.page.toast
 import dev.entao.theme.ColorX
@@ -24,5 +25,14 @@ class TestPage2 : LinearPage() {
 
     }
 
+    override fun onPause() {
+        super.onPause()
+        logd("onPause: ", pageName)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        logd("onStart: ", pageName)
+    }
 
 }

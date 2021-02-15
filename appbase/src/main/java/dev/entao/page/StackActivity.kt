@@ -2,19 +2,18 @@ package dev.entao.page
 
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.View
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.view.animation.TranslateAnimation
 import android.widget.FrameLayout
-import dev.entao.log.logd
+import androidx.lifecycle.Lifecycle
 import dev.entao.pages.toast
 import dev.entao.views.FrameLayout
-import dev.entao.views.beginAnimation
+
+
+typealias LifeState = Lifecycle.State
+typealias LifeEvent = Lifecycle.Event
 
 open class StackActivity : BaseActivity() {
 
-    lateinit var pageManager: StackContainer
+    lateinit var pageContainer: StackContainer
     lateinit var containerFrameLayout: FrameLayout
         private set
 
@@ -31,37 +30,37 @@ open class StackActivity : BaseActivity() {
             fitsSystemWindows = true
         }
         setContentView(containerFrameLayout)
-        pageManager = StackContainer(this, this, containerFrameLayout)
+        pageContainer = StackContainer(this, containerFrameLayout)
         val p = getInitPage()
         if (p != null) {
-            pageManager.pushPage(p)
+            pageContainer.pushPage(p)
         }
     }
 
     fun setContentPage(p: Page) {
-        pageManager.setContentPage(p)
+        pageContainer.setContentPage(p)
     }
 
     fun <T : Page> setContentPage(p: T, block: T.() -> Unit) {
         p.block()
-        pageManager.setContentPage(p)
+        pageContainer.setContentPage(p)
     }
 
     fun pushPage(p: Page) {
-        pageManager.pushPage(p)
+        pageContainer.pushPage(p)
     }
 
     fun <T : Page> pushPage(p: T, block: T.() -> Unit) {
         p.block()
-        pageManager.pushPage(p)
+        pageContainer.pushPage(p)
     }
 
     override fun onBackPressed() {
-        if (pageManager.topPage?.onBackPressed() == true) {
+        if (pageContainer.topPage?.onBackPressed() == true) {
             return
         }
-        if (pageManager.pageCount > 1) {
-            pageManager.popPage()
+        if (pageContainer.pageCount > 1) {
+            pageContainer.popPage()
             return
         }
         if (allowFinish()) {
@@ -70,14 +69,14 @@ open class StackActivity : BaseActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (pageManager.topPage?.onKeyDown(keyCode, event) == true) {
+        if (pageContainer.topPage?.onKeyDown(keyCode, event) == true) {
             return true
         }
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        if (pageManager.topPage?.onKeyUp(keyCode, event) == true) {
+        if (pageContainer.topPage?.onKeyUp(keyCode, event) == true) {
             return true
         }
         return super.onKeyUp(keyCode, event)
