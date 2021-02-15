@@ -93,7 +93,7 @@ abstract class MsgPage : Page(), MsgListener, Progress {
         if (bk != null) {
             return
         }
-        if (pageManager.bottomPage != this) {
+        if (stackContainer.bottomPage != this) {
             tb.showBack {
                 if (!onBackPressed()) {
                     finishPage()

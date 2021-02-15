@@ -23,7 +23,7 @@ open class StackContainer(val activity: StackActivity, private val frameLayout: 
     val topPage: Page? get() = pageQueue.lastOrNull()
     val bottomPage: Page? get() = pageQueue.firstOrNull()
 
-    var animDuration: Long = 240
+    var animDuration: Long = 1240
 
     //新页面进入,顶部,入栈
     var animEnter: Animation? = rightInAnim
@@ -66,26 +66,33 @@ open class StackContainer(val activity: StackActivity, private val frameLayout: 
         }
         val currState = lifecycleOwner.lifecycle.currentState
         page.currentState = currState
-        oldPage?.currentState = LifeState.CREATED
+
+
         if (anim && oldPage != null && currState.isAtLeast(LifeState.STARTED)) {
-            val eA = animEnter ?: return
-
-            val pA = animPause ?: noChangeAnim
-            pA.duration = animDuration
-            oldPage.pageView.beginAnimation(pA)
-
-            eA.duration = animDuration
-            page.pageView.beginAnimation(eA)
+            val eA = animEnter
+            if (eA == null) {
+                oldPage.currentState = LifeState.CREATED
+            } else {
+                val pA = animPause ?: noChangeAnim
+                pA.duration = animDuration
+                oldPage.pageView.beginAnimation(pA)
+                eA.duration = animDuration
+                page.pageView.beginAnimation(eA) {
+                    oldPage.currentState = LifeState.CREATED
+                }
+            }
+        } else {
+            oldPage?.currentState = LifeState.CREATED
         }
     }
 
     private fun removePage(page: Page, anim: Boolean) {
         page.pageView.animation?.cancel()
-//        page.lifecycle.removeObserver(lifeObserver)
-        page.currentState = Lifecycle.State.DESTROYED
-        page.onDetach()
-        page.lifecycle.removeObserver(this.lifeObserver)
+
         if (pageQueue.size <= 1 || this.topPage != page) {
+            page.currentState = Lifecycle.State.DESTROYED
+            page.onDetach()
+            page.lifecycle.removeObserver(this.lifeObserver)
             pageQueue.remove(page)
             frameLayout.removeView(page.pageView)
             if (pageQueue.isEmpty()) {
@@ -99,11 +106,17 @@ open class StackContainer(val activity: StackActivity, private val frameLayout: 
         newTopPage.currentState = lifecycleOwner.lifecycle.currentState
         val la = animLeave
         if (!anim || la == null || !newTopPage.currentState.isAtLeast(LifeState.STARTED)) {
+            page.currentState = Lifecycle.State.DESTROYED
+            page.onDetach()
+            page.lifecycle.removeObserver(this.lifeObserver)
             frameLayout.removeView(page.pageView)
             return
         }
         la.duration = animDuration
         page.pageView.beginAnimation(la) {
+            page.currentState = Lifecycle.State.DESTROYED
+            page.onDetach()
+            page.lifecycle.removeObserver(this.lifeObserver)
             frameLayout.removeView(page.pageView)
         }
         this.animResume?.duration = animDuration
@@ -153,7 +166,7 @@ open class StackContainer(val activity: StackActivity, private val frameLayout: 
     }
 
     protected open fun onStateChangedEvent(source: LifecycleOwner, event: Lifecycle.Event) {
-        logd("Stack: Source=", source::class.simpleName + " State=", source.lifecycle.currentState, " Event=", event)
+//        logd("Stack: Source=", source::class.simpleName + " State=", source.lifecycle.currentState, " Event=", event)
         if (source === lifecycleOwner) {
             val pages = pageQueue.toList()
             when (event) {

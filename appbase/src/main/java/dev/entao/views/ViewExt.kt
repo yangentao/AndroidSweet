@@ -373,3 +373,26 @@ fun View.beginAnimation(a: Animation?) {
         this.startAnimation(a)
     }
 }
+
+fun Animation.begin(view: View) {
+    this.cancel()
+    view.startAnimation(this)
+}
+
+fun Animation.begin(view: View, onEndCallback: () -> Unit) {
+    this.cancel()
+    this.setAnimationListener(object : Animation.AnimationListener {
+        override fun onAnimationStart(animation: Animation?) {
+
+        }
+
+        override fun onAnimationEnd(animation: Animation?) {
+            onEndCallback()
+        }
+
+        override fun onAnimationRepeat(animation: Animation?) {
+        }
+
+    })
+    view.startAnimation(this)
+}

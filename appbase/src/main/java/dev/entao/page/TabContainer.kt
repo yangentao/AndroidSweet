@@ -74,7 +74,7 @@ open class TabContainer(val tabPage: Page, private val frameLayout: FrameLayout)
         }
         pageList.add(page)
         page.lifecycle.addObserver(this.lifeObserver)
-        page.onAttach(tabPage.pageManager)
+        page.onAttach(tabPage.stackContainer)
         if (page.pageView.layoutParams is FrameParams) {
             frameLayout.addView(page.pageView)
         } else {
@@ -123,7 +123,7 @@ open class TabContainer(val tabPage: Page, private val frameLayout: FrameLayout)
     }
 
     protected open fun onStateChangedEvent(source: LifecycleOwner, event: Lifecycle.Event) {
-        logd("Tab: Source=", source::class.simpleName + " State=", source.lifecycle.currentState, " Event=", event)
+        // logd("Tab: Source=", source::class.simpleName + " State=", source.lifecycle.currentState, " Event=", event)
         if (source === lifecycleOwner) {
             val pages = pageList.toList()
             when (event) {

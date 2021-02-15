@@ -21,15 +21,17 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
     val pageId: Int = currentPageId_++
     val pageName: String = this::class.qualifiedName + "@$pageId" // for debug only
     lateinit var pageView: RelativeLayout
+        private set
 
     internal val lifecycleRegistry: LifecycleRegistry by lazy { LifecycleRegistry(this) }
-    internal var finishAnim: Animation? = null
 
     //即使当前页已经finish, 也要保持pageManager的引用, 因为可能会调用当前页面的pushPage方法.
     //并不会造成内存泄漏问题,
-    lateinit var pageManager: StackContainer
-    val context: Context get() = pageManager.activity
-    val activity: BaseActivity get() = pageManager.activity
+    lateinit var stackContainer: StackContainer
+        private set
+
+    val context: Context get() = stackContainer.activity
+    val activity: BaseActivity get() = stackContainer.activity
 
     var attached: Boolean = false
         private set
@@ -53,20 +55,20 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
         get() = currentState.isAtLeast(Lifecycle.State.DESTROYED)
 
 
-    val isTopPage: Boolean get() = pageManager.topPage == this
-    val isBottomPage: Boolean get() = pageManager.bottomPage == this
+    val isTopPage: Boolean get() = stackContainer.topPage == this
+    val isBottomPage: Boolean get() = stackContainer.bottomPage == this
 
     fun pushPage(p: Page) {
-        pageManager.pushPage(p)
+        stackContainer.pushPage(p)
     }
 
     fun <T : Page> pushPage(p: T, block: T.() -> Unit) {
         p.block()
-        pageManager.pushPage(p)
+        stackContainer.pushPage(p)
     }
 
     open fun finishPage() {
-        pageManager.finishPage(this)
+        stackContainer.finishPage(this)
     }
 
     open fun onBackPressed(): Boolean {
@@ -74,7 +76,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
     }
 
     open fun onAttach(pm: StackContainer) {
-        this.pageManager = pm
+        this.stackContainer = pm
         pageView = RelativeLayout(this.context).apply {
             backColorWhite()
             isClickable = true
@@ -101,34 +103,28 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
     }
 
     open fun onCreate(pageView: RelativeLayout) {
-        logd("onCreate: ", pageName)
     }
 
     open fun onPageCreated() {}
 
 
     open fun onStart() {
-        logd("onStart: ", pageName)
     }
 
 
     open fun onResume() {
-        logd("onResume: ", pageName)
     }
 
 
     open fun onPause() {
-        logd("onPause: ", pageName)
     }
 
 
     open fun onStop() {
-        logd("onStop: ", pageName)
     }
 
 
     open fun onDestroy() {
-        logd("onDestroy: ", pageName)
     }
 
     open fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -147,6 +143,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
                     onPageCreated()
                 }
                 Lifecycle.Event.ON_START -> {
+                    this.pageView.visiable()
                     onStart()
                 }
                 Lifecycle.Event.ON_RESUME -> {
@@ -157,6 +154,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
                 }
                 Lifecycle.Event.ON_STOP -> {
                     onStop()
+                    this.pageView.gone()
                 }
                 Lifecycle.Event.ON_DESTROY -> {
                     onDestroy()
