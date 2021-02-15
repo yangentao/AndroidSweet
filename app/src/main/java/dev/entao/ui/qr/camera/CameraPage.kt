@@ -2,7 +2,6 @@ package dev.entao.kan.qr.camera
 
 import android.Manifest
 import android.graphics.ImageFormat
-import android.graphics.Rect
 import android.widget.LinearLayout
 
 import com.google.zxing.*
@@ -15,7 +14,7 @@ import dev.entao.views.fill
 import dev.entao.views.needId
 import dev.entao.log.logd
 import dev.entao.page.LinearPage
-import java.util.*
+import dev.entao.ui.qr.camera.CameraPreview
 
 
 /**

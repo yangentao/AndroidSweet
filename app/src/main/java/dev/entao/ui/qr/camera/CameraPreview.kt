@@ -1,6 +1,6 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "DEPRECATION")
 
-package dev.entao.kan.qr.camera
+package dev.entao.ui.qr.camera
 
 import android.Manifest
 import android.content.Context
@@ -10,6 +10,7 @@ import android.view.TextureView
 import android.widget.FrameLayout
 import dev.entao.appbase.App
 import dev.entao.appbase.hasPerm
+import dev.entao.kan.qr.camera.*
 import dev.entao.pages.toast
 import dev.entao.views.Params
 import dev.entao.views.fill
@@ -173,7 +174,7 @@ class CameraPreview(context: Context) : FrameLayout(context), TextureView.Surfac
             }
             return a
         } else {
-            val a = Rect(0, 0, h, w)
+            val aa = Rect(0, 0, h, w)
         }
         return a
     }

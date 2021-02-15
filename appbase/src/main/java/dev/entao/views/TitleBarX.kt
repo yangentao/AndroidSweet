@@ -57,12 +57,12 @@ open class TitleBarXImageItem(context: Context) : TitleBarXItem(context) {
         if (d == null) {
             view.setImageDrawable(null)
         } else {
-            val d = if (autoTint) {
+            val dd = if (autoTint) {
                 d.tintedWhite.sized(TitleBarX.ImgSize)
             } else {
                 d.sized(TitleBarX.ImgSize)
             }
-            view.setImageDrawable(d)
+            view.setImageDrawable(dd)
         }
     }
 }

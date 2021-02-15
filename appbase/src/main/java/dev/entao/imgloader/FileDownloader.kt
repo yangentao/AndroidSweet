@@ -34,7 +34,7 @@ object FileDownloader {
 
     fun download(url: String, block: (File?) -> Unit) {
         pool.submit {
-            downloadSync(url) { url, ok ->
+            downloadSync(url) { url, _ ->
                 val f = FileLocalCache.find(url)
                 block(f)
             }

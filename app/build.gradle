@@ -50,6 +50,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.6'
+        languageVersion = "1.5"
+        apiVersion = "1.5"
+        useIR = true
     }
 //    flavorDimensions 'channel'
 //    productFlavors {

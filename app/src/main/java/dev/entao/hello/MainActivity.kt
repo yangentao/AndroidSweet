@@ -16,8 +16,8 @@ class MainActivity : PageActivity() {
         tabPage.addTab(TabPageItem("B", R.mipmap.reg, TestPage2()))
         tabPage.selectTab(0)
 
-//        setContentPage(tabPage)
-        setContentPage(TestPage())
+        setContentPage(tabPage)
+//        setContentPage(TestPage())
 
 
     }

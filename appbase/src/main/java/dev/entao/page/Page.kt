@@ -27,7 +27,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
 
     //即使当前页已经finish, 也要保持pageManager的引用, 因为可能会调用当前页面的pushPage方法.
     //并不会造成内存泄漏问题,
-    lateinit var pageManager: PageContainer
+    lateinit var pageManager: StackContainer
     val context: Context get() = pageManager.activity
     val activity: BaseActivity get() = pageManager.activity
 
@@ -73,7 +73,7 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
         return false
     }
 
-    open fun onAttach(pm: PageContainer) {
+    open fun onAttach(pm: StackContainer) {
         this.pageManager = pm
         pageView = RelativeLayout(this.context).apply {
             backColorWhite()

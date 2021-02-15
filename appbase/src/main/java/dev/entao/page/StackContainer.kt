@@ -1,5 +1,3 @@
-@file:Suppress("unused")
-
 package dev.entao.page
 
 import android.view.View
@@ -7,40 +5,14 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
 import android.widget.FrameLayout
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import dev.entao.log.logd
 import dev.entao.views.FrameParams
-import dev.entao.views.gone
-import dev.entao.views.visiable
-import java.util.*
-import kotlin.collections.ArrayList
+import dev.entao.views.beginAnimation
 
-
-typealias LifeState = Lifecycle.State
-typealias LifeEvent = Lifecycle.Event
-
-open class PageQueue(val activity: BaseActivity, private val lifecycleOwner: LifecycleOwner, private val frameLayout: FrameLayout) {
-    private val pageQueue: ArrayList<Page> = ArrayList()
-    val pageCount: Int get() = pageQueue.size
-    var currentPage: Page? = null
-
-    fun getPage(index: Int): Page {
-        return pageQueue[index]
-    }
-
-    fun addPage(page: Page) {
-
-    }
-
-    fun finishPage(p: Page) {
-
-    }
-}
-
-open class PageContainer(val activity: BaseActivity, private val lifecycleOwner: LifecycleOwner, private val frameLayout: FrameLayout) {
+open class StackContainer(val activity: BaseActivity, private val lifecycleOwner: LifecycleOwner, private val frameLayout: FrameLayout) {
 
     private val pageQueue: ArrayList<Page> = ArrayList()
     val pageCount: Int get() = pageQueue.size
@@ -48,7 +20,19 @@ open class PageContainer(val activity: BaseActivity, private val lifecycleOwner:
     val topPage: Page? get() = pageQueue.lastOrNull()
     val bottomPage: Page? get() = pageQueue.firstOrNull()
 
-    protected var onlyCurrentVisible: Boolean = false
+    var animDuration: Long = 500
+
+    //新页面进入,顶部,入栈
+    var enterAnim: Animation? = rightInAnim
+
+    //页面关闭,顶部,出栈
+    var leaveAnim: Animation? = rightOutAnim
+
+    //变成栈顶
+    var resumeAnim: Animation? = alphaInAnim
+
+    //被新页面覆盖
+    var pauseAnim: Animation? = alphaOutAnim
 
     var currentPage: Page? = null
         set(value) {
@@ -56,10 +40,6 @@ open class PageContainer(val activity: BaseActivity, private val lifecycleOwner:
             if (old !== value) {
                 if (value != null && value !in pageQueue) error("没有被添加:" + value.pageName)
                 field = value
-                if (onlyCurrentVisible) {
-//                    old?.pageView?.gone()
-//                    value?.pageView?.visiable()
-                }
                 onCurrentPageChanged(old, value)
             }
         }
@@ -69,7 +49,7 @@ open class PageContainer(val activity: BaseActivity, private val lifecycleOwner:
 
     private var ignoreAnim = false
 
-    private val lifeObserver = LifecycleEventObserver { source, event -> this@PageContainer.onStateChanged(source, event) }
+    private val lifeObserver = LifecycleEventObserver { source, event -> this@StackContainer.onStateChanged(source, event) }
 
 
     init {
@@ -122,11 +102,31 @@ open class PageContainer(val activity: BaseActivity, private val lifecycleOwner:
     }
 
     protected open fun onPageAnimEnter(oldView: View, curView: View) {
-
+        this.enterAnim?.also {
+            it.duration = animDuration
+            curView.beginAnimation(it) {}
+        }
+        this.pauseAnim?.also {
+            it.duration = animDuration
+            oldView.beginAnimation(it) {}
+        }
     }
 
     protected open fun onPageAnimLeave(oldView: View, curView: View, onOldViewAnimEnd: (View) -> Unit) {
-        onOldViewAnimEnd(oldView)
+        this.leaveAnim?.also { am ->
+            am.duration = animDuration
+            logd("begin Anim")
+            oldView.beginAnimation(am) {
+                logd("end Anim")
+                onOldViewAnimEnd(oldView)
+            }
+        }
+        this.resumeAnim?.also { ra ->
+            ra.duration = animDuration
+            curView.beginAnimation(ra) {
+
+            }
+        }
     }
 
     fun addPage(page: Page) {
@@ -267,6 +267,33 @@ open class PageContainer(val activity: BaseActivity, private val lifecycleOwner:
                 }
             }
         }
+
+    }
+
+    companion object {
+        val rightInAnim: Animation
+            get() = TranslateAnimation(
+                Animation.RELATIVE_TO_PARENT, 1f, Animation.RELATIVE_TO_PARENT, 0f,
+                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 0f,
+            ).apply {
+                this.fillBefore = true
+            }
+        val rightOutAnim: Animation
+            get() = TranslateAnimation(
+                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 1f,
+                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 0f,
+            ).apply {
+                this.fillAfter = true
+            }
+
+        val alphaInAnim: Animation
+            get() = AlphaAnimation(0.3f, 1.0f).apply {
+                this.fillBefore = true
+            }
+        val alphaOutAnim: Animation
+            get() = AlphaAnimation(1f, 0.3f).apply {
+                this.fillBefore = true
+            }
 
     }
 

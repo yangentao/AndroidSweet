@@ -14,7 +14,7 @@ import dev.entao.views.beginAnimation
 
 open class PageActivity : BaseActivity() {
 
-    lateinit var pageManager: StackPageContainer
+    lateinit var pageManager: StackContainer
     lateinit var containerFrameLayout: FrameLayout
         private set
 
@@ -31,7 +31,7 @@ open class PageActivity : BaseActivity() {
             fitsSystemWindows = true
         }
         setContentView(containerFrameLayout)
-        pageManager = StackPageContainer(this, containerFrameLayout)
+        pageManager = StackContainer(this, this, containerFrameLayout)
         val p = getInitPage()
         if (p != null) {
             pageManager.pushPage(p)
@@ -100,83 +100,4 @@ open class PageActivity : BaseActivity() {
 
 
 }
-
-
-class StackPageContainer(activity: PageActivity, frameLayout: FrameLayout) : PageContainer(activity, activity, frameLayout) {
-
-
-    var animDuration: Long = 500
-
-    //新页面进入,顶部,入栈
-    var enterAnim: Animation? = rightInAnim
-
-    //页面关闭,顶部,出栈
-    var leaveAnim: Animation? = rightOutAnim
-
-    //变成栈顶
-    var resumeAnim: Animation? = alphaInAnim
-
-    //被新页面覆盖
-    var pauseAnim: Animation? = alphaOutAnim
-
-
-    override fun onPageAnimEnter(oldView: View, curView: View) {
-        this.enterAnim?.also {
-            it.duration = animDuration
-            curView.beginAnimation(it) {}
-        }
-        this.pauseAnim?.also {
-            it.duration = animDuration
-            oldView.beginAnimation(it) {}
-        }
-    }
-
-    override fun onPageAnimLeave(oldView: View, curView: View, onOldViewAnimEnd: (View) -> Unit) {
-        this.leaveAnim?.also { am ->
-            am.duration = animDuration
-            logd("begin Anim")
-            oldView.beginAnimation(am) {
-                logd("end Anim")
-                onOldViewAnimEnd(oldView)
-            }
-        }
-        this.resumeAnim?.also { ra ->
-            ra.duration = animDuration
-            curView.beginAnimation(ra) {
-
-            }
-        }
-    }
-
-
-    companion object {
-        val rightInAnim: Animation
-            get() = TranslateAnimation(
-                Animation.RELATIVE_TO_PARENT, 1f, Animation.RELATIVE_TO_PARENT, 0f,
-                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 0f,
-            ).apply {
-                this.fillBefore = true
-            }
-        val rightOutAnim: Animation
-            get() = TranslateAnimation(
-                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 1f,
-                Animation.RELATIVE_TO_PARENT, 0f, Animation.RELATIVE_TO_PARENT, 0f,
-            ).apply {
-                this.fillAfter = true
-            }
-
-        val alphaInAnim: Animation
-            get() = AlphaAnimation(0.3f, 1.0f).apply {
-                this.fillBefore = true
-            }
-        val alphaOutAnim: Animation
-            get() = AlphaAnimation(1f, 0.3f).apply {
-                this.fillBefore = true
-            }
-
-    }
-
-
-}
-
 
