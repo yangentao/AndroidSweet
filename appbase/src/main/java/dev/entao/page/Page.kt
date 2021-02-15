@@ -92,7 +92,6 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
     }
 
     open fun onDetach() {
-//        logd(pageName, ".ON_DETACH")
         lifecycleRegistry.removeObserver(this)
         attached = false
 
@@ -144,7 +143,6 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
                     onPageCreated()
                 }
                 Lifecycle.Event.ON_START -> {
-                    this.pageView.visiable()
                     onStart()
                 }
                 Lifecycle.Event.ON_RESUME -> {
@@ -155,7 +153,6 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
                 }
                 Lifecycle.Event.ON_STOP -> {
                     onStop()
-                    this.pageView.gone()
                 }
                 Lifecycle.Event.ON_DESTROY -> {
                     onDestroy()

@@ -12,7 +12,7 @@ import dev.entao.views.gone
 import dev.entao.views.visiable
 
 open class TabContainer(val tabPage: Page, private val frameLayout: FrameLayout) {
-    private val lifecycleOwner: LifecycleOwner = tabPage.pageManager.lifecycleOwner
+    private val lifecycleOwner: LifecycleOwner = tabPage
     private val pageList: ArrayList<Page> = ArrayList()
     val pageCount: Int get() = pageList.size
 
@@ -73,6 +73,7 @@ open class TabContainer(val tabPage: Page, private val frameLayout: FrameLayout)
             error("Already Exist Page:" + page::class.qualifiedName)
         }
         pageList.add(page)
+        page.lifecycle.addObserver(this.lifeObserver)
         page.onAttach(tabPage.pageManager)
         if (page.pageView.layoutParams is FrameParams) {
             frameLayout.addView(page.pageView)
@@ -89,6 +90,7 @@ open class TabContainer(val tabPage: Page, private val frameLayout: FrameLayout)
         page.pageView.animation?.cancel()
         page.currentState = LifeState.DESTROYED
         page.onDetach()
+        page.lifecycle.removeObserver(this.lifeObserver)
         pageList.remove(page)
         frameLayout.removeView(page.pageView)
         updateVisiable()
@@ -104,6 +106,7 @@ open class TabContainer(val tabPage: Page, private val frameLayout: FrameLayout)
             it.pageView.animation?.cancel()
             it.currentState = LifeState.DESTROYED
             it.onDetach()
+            it.lifecycle.removeObserver(this.lifeObserver)
         }
         pageList.removeAll(ls)
         for (p in ls) {
@@ -120,7 +123,7 @@ open class TabContainer(val tabPage: Page, private val frameLayout: FrameLayout)
     }
 
     protected open fun onStateChangedEvent(source: LifecycleOwner, event: Lifecycle.Event) {
-        logd(source::class.simpleName + " StateChanged:", source.lifecycle.currentState, event)
+        logd("TabContainer: ",source::class.simpleName + " StateChanged:", source.lifecycle.currentState, event)
         if (source === lifecycleOwner) {
             when (event) {
                 Lifecycle.Event.ON_CREATE -> {

@@ -56,6 +56,7 @@ open class StackContainer(val activity: StackActivity, private val frameLayout: 
         val oldPage = topPage
         pageQueue.add(page)
         page.onAttach(this)
+        page.lifecycle.addObserver(this.lifeObserver)
         if (page.pageView.layoutParams is FrameParams) {
             frameLayout.addView(page.pageView)
         } else {
@@ -81,6 +82,7 @@ open class StackContainer(val activity: StackActivity, private val frameLayout: 
 //        page.lifecycle.removeObserver(lifeObserver)
         page.currentState = Lifecycle.State.DESTROYED
         page.onDetach()
+        page.lifecycle.removeObserver(this.lifeObserver)
         if (pageQueue.size <= 1 || this.topPage != page) {
             pageQueue.remove(page)
             frameLayout.removeView(page.pageView)
@@ -149,7 +151,7 @@ open class StackContainer(val activity: StackActivity, private val frameLayout: 
     }
 
     protected open fun onStateChangedEvent(source: LifecycleOwner, event: Lifecycle.Event) {
-        logd(source::class.simpleName + " StateChanged:", source.lifecycle.currentState, event)
+        logd("StackContainer: ", source::class.simpleName + " StateChanged:", source.lifecycle.currentState, event)
         if (source === lifecycleOwner) {
             when (event) {
                 Lifecycle.Event.ON_CREATE -> {
