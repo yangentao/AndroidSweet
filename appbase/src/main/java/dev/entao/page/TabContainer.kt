@@ -123,32 +123,45 @@ open class TabContainer(val tabPage: Page, private val frameLayout: FrameLayout)
     }
 
     protected open fun onStateChangedEvent(source: LifecycleOwner, event: Lifecycle.Event) {
-        logd("TabContainer: ",source::class.simpleName + " StateChanged:", source.lifecycle.currentState, event)
+        logd("Tab: Source=", source::class.simpleName + " State=", source.lifecycle.currentState, " Event=", event)
         if (source === lifecycleOwner) {
+            val pages = pageList.toList()
             when (event) {
-                Lifecycle.Event.ON_CREATE -> {
-                    pageList.toList().forEach {
+                LifeEvent.ON_CREATE -> {
+                    pages.forEach {
                         it.lifecycleRegistry.handleLifecycleEvent(event)
                     }
                 }
-                Lifecycle.Event.ON_DESTROY -> {
+                LifeEvent.ON_DESTROY -> {
                     removeAll()
                 }
-                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME, Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    val ls = pageList.toList()
-                    for (n in ls.indices) {
-                        val page = ls[n]
-                        if (n == currentIndex) {
-                            page.lifecycleRegistry.handleLifecycleEvent(event)
-                            page.pageView.visiable()
+                LifeEvent.ON_START -> {
+                    val tp = currentPage
+                    pages.forEach { p ->
+                        if (p == tp) {
+                            p.lifecycleRegistry.handleLifecycleEvent(event)
+                            p.pageView.visiable()
                         } else {
-                            page.pageView.gone()
-                            page.currentState = LifeState.CREATED
+                            p.currentState = LifeState.CREATED
+                            p.pageView.gone()
                         }
                     }
                 }
+                LifeEvent.ON_STOP -> {
+                    val tp = currentPage
+                    pages.forEach { p ->
+                        if (p == tp) {
+                            p.lifecycleRegistry.handleLifecycleEvent(event)
+                        } else {
+                            p.currentState = LifeState.CREATED
+                        }
+                        p.pageView.gone()
+                    }
+                }
+                LifeEvent.ON_RESUME, LifeEvent.ON_PAUSE -> {
+                    currentPage?.lifecycleRegistry?.handleLifecycleEvent(event)
+                }
                 else -> {
-
                 }
             }
         }
