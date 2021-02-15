@@ -138,7 +138,7 @@ open class PageContainer(val activity: BaseActivity, private val lifecycleOwner:
         }
         pageQueue.add(page)
         page.lifecycle.addObserver(this.lifeObserver)
-        page.onAttach(this)
+//        page.onAttach(this)
         page.currentState = LifeState.INITIALIZED
         logd("PageAdded:", page.pageName)
         logd("PageQueue: ", pageQueue.joinToString(",") { it.pageName })

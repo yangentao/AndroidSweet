@@ -12,7 +12,7 @@ import dev.entao.pages.toast
 import dev.entao.views.FrameLayout
 import dev.entao.views.beginAnimation
 
-open class PageActivity : BaseActivity() {
+open class StackActivity : BaseActivity() {
 
     lateinit var pageManager: StackContainer
     lateinit var containerFrameLayout: FrameLayout

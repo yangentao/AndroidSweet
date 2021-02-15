@@ -105,15 +105,15 @@ class ContainerPage : Page() {
         return super.onBackPressed()
     }
 
-    override fun onAttach(pm: PageContainer) {
-        super.onAttach(pm)
-        frameLayout = FrameLayout(context)
-        this.pageView.addView(frameLayout, Params.relative.fill)
-        this.pageList.forEach {
-            it.onAttach(pm)
-            it.lifecycle.addObserver(this)
-        }
-    }
+//    fun onAttach(pm: PageContainer) {
+//        super.onAttach(pm)
+//        frameLayout = FrameLayout(context)
+//        this.pageView.addView(frameLayout, Params.relative.fill)
+//        this.pageList.forEach {
+//            it.onAttach(pm)
+//            it.lifecycle.addObserver(this)
+//        }
+//    }
 
     override fun onDetach() {
         this.pageList.forEach {

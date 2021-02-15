@@ -82,25 +82,25 @@ class TabPage : Page() {
         return true
     }
 
-    override fun onAttach(pm: PageContainer) {
-        super.onAttach(pm)
-        navView = this.pageView.addViewX(BottomNavigationView(context, null, bottomNavStyle), Params.relative.parentHor.parentBottom.heightWrap) {
-//            backColor(Color.WHITE)
-        }
-        frameView = this.pageView.addViewX(FrameLayout(context), Params.relative.parentTop.parentHor.above(navView))
-
-        container = TabPageContainer(pm.activity, this, frameView)
-        for (item in items) {
-            addItemToContainer(item)
-        }
-        if (currentTab in items.indices) {
-            selectTab(currentTab)
-        }
-        navView.setOnNavigationItemSelectedListener {
-            selByUser(it)
-        }
-
-    }
+//    override fun onAttach(pm: PageContainer) {
+//        super.onAttach(pm)
+//        navView = this.pageView.addViewX(BottomNavigationView(context, null, bottomNavStyle), Params.relative.parentHor.parentBottom.heightWrap) {
+////            backColor(Color.WHITE)
+//        }
+//        frameView = this.pageView.addViewX(FrameLayout(context), Params.relative.parentTop.parentHor.above(navView))
+//
+//        container = TabPageContainer(pm.activity, this, frameView)
+//        for (item in items) {
+//            addItemToContainer(item)
+//        }
+//        if (currentTab in items.indices) {
+//            selectTab(currentTab)
+//        }
+//        navView.setOnNavigationItemSelectedListener {
+//            selByUser(it)
+//        }
+//
+//    }
 
 
     class TabPageContainer(activity: BaseActivity, lifecycleOwner: LifecycleOwner, frameLayout: FrameLayout) : PageContainer(activity, lifecycleOwner, frameLayout) {

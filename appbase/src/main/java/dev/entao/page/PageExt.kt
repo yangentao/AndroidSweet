@@ -41,7 +41,7 @@ fun <T : View> Page.findView(key: Int): T {
 }
 
 
-fun PageActivity.pickImage(block: (Uri) -> Unit) {
+fun StackActivity.pickImage(block: (Uri) -> Unit) {
     val i = Intent(Intent.ACTION_PICK)
     i.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
     this.startActivityResult(i) {
@@ -55,7 +55,7 @@ fun PageActivity.pickImage(block: (Uri) -> Unit) {
     }
 }
 
-fun PageActivity.takeImage(block: (File) -> Unit) {
+fun StackActivity.takeImage(block: (File) -> Unit) {
     val fmt = "JPEG"
     val outputFile = AppFile.tempFile(fmt)
     val outUri = FileUri(outputFile)
@@ -72,7 +72,7 @@ fun PageActivity.takeImage(block: (File) -> Unit) {
     }
 }
 
-fun PageActivity.takeViedo(sizeM: Int, block: (Uri) -> Unit) {
+fun StackActivity.takeViedo(sizeM: Int, block: (Uri) -> Unit) {
     val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
     intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, sizeM * 1024 * 1024)
     startActivityResult(intent) {
@@ -82,7 +82,7 @@ fun PageActivity.takeViedo(sizeM: Int, block: (Uri) -> Unit) {
     }
 }
 
-fun PageActivity.pickVideo(block: (Uri) -> Unit) {
+fun StackActivity.pickVideo(block: (Uri) -> Unit) {
     val i = Intent(Intent.ACTION_PICK)
     i.setDataAndType(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*")
     startActivityResult(i) {
@@ -92,7 +92,7 @@ fun PageActivity.pickVideo(block: (Uri) -> Unit) {
     }
 }
 
-fun PageActivity.cropImage(uri: Uri, outX: Int, outY: Int, result: (Bitmap?) -> Unit) {
+fun StackActivity.cropImage(uri: Uri, outX: Int, outY: Int, result: (Bitmap?) -> Unit) {
     val intent = Intent("com.android.camera.action.CROP")
     intent.setDataAndType(uri, "image/*")
     intent.putExtra("crop", "true")
@@ -121,7 +121,7 @@ fun PageActivity.cropImage(uri: Uri, outX: Int, outY: Int, result: (Bitmap?) -> 
     }
 }
 
-fun PageActivity.selectPortrait(block: (Bitmap) -> Unit) {
+fun StackActivity.selectPortrait(block: (Bitmap) -> Unit) {
     selectImage { uri ->
         cropImage(uri, 256, 256) {
             if (it != null) {
@@ -131,7 +131,7 @@ fun PageActivity.selectPortrait(block: (Bitmap) -> Unit) {
     }
 }
 
-fun PageActivity.selectImage(block: (Uri) -> Unit) {
+fun StackActivity.selectImage(block: (Uri) -> Unit) {
     this.xdialog.showListString(null, listOf("拍照", "相册")) { _, s ->
         if (s == "拍照") {
             takeImage { f ->

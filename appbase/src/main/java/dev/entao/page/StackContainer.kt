@@ -1,6 +1,7 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate", "SameParameterValue")
+
 package dev.entao.page
 
-import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
@@ -20,36 +21,21 @@ open class StackContainer(val activity: BaseActivity, private val lifecycleOwner
     val topPage: Page? get() = pageQueue.lastOrNull()
     val bottomPage: Page? get() = pageQueue.firstOrNull()
 
-    var animDuration: Long = 500
+    var animDuration: Long = 240
 
     //新页面进入,顶部,入栈
-    var enterAnim: Animation? = rightInAnim
+    var animEnter: Animation? = rightInAnim
 
     //页面关闭,顶部,出栈
-    var leaveAnim: Animation? = rightOutAnim
+    var animLeave: Animation? = rightOutAnim
 
     //变成栈顶
-    var resumeAnim: Animation? = alphaInAnim
+    var animResume: Animation? = alphaInAnim
 
     //被新页面覆盖
-    var pauseAnim: Animation? = alphaOutAnim
+    var animPause: Animation? = alphaOutAnim
 
-    var currentPage: Page? = null
-        set(value) {
-            val old = field
-            if (old !== value) {
-                if (value != null && value !in pageQueue) error("没有被添加:" + value.pageName)
-                field = value
-                onCurrentPageChanged(old, value)
-            }
-        }
-
-    private val ownerState: LifeState get() = lifecycleOwner.lifecycle.currentState
-
-
-    private var ignoreAnim = false
-
-    private val lifeObserver = LifecycleEventObserver { source, event -> this@StackContainer.onStateChanged(source, event) }
+    private val lifeObserver = LifecycleEventObserver { source, event -> onStateChangedEvent(source, event) }
 
 
     init {
@@ -60,154 +46,109 @@ open class StackContainer(val activity: BaseActivity, private val lifecycleOwner
         return pageQueue[index]
     }
 
-    protected open fun onCurrentPageChanged(oldPage: Page?, newPage: Page?) {
-        if (oldPage == null) {
-            if (newPage == null) {
-                return
-            } else {
-                newPage.currentState = ownerState
-            }
-        } else {
-            val oldInQueue = oldPage in pageQueue
-            if (oldInQueue) {
-                if (ownerState.isAtLeast(LifeState.CREATED)) {
-                    oldPage.currentState = LifeState.CREATED
-                } else {
-                    oldPage.currentState = ownerState  //init or destroyed
-                }
-                if (newPage == null) {
-                    return
-                } else {
-                    newPage.currentState = ownerState
-                    if (!ignoreAnim && ownerState.isAtLeast(LifeState.STARTED)) {
-                        onPageAnimEnter(oldPage.pageView, newPage.pageView)
-                    }
-                }
-            } else {
-                if (newPage == null) {
-                    frameLayout.removeView(oldPage.pageView)
-                } else {
-                    newPage.currentState = ownerState
-                    if (!ignoreAnim && ownerState.isAtLeast(LifeState.STARTED)) {
-                        onPageAnimLeave(oldPage.pageView, newPage.pageView) {
-                            frameLayout.removeView(it)
-                        }
-                    } else {
-                        frameLayout.removeView(oldPage.pageView)
-                    }
-                }
-            }
-
-        }
-    }
-
-    protected open fun onPageAnimEnter(oldView: View, curView: View) {
-        this.enterAnim?.also {
-            it.duration = animDuration
-            curView.beginAnimation(it) {}
-        }
-        this.pauseAnim?.also {
-            it.duration = animDuration
-            oldView.beginAnimation(it) {}
-        }
-    }
-
-    protected open fun onPageAnimLeave(oldView: View, curView: View, onOldViewAnimEnd: (View) -> Unit) {
-        this.leaveAnim?.also { am ->
-            am.duration = animDuration
-            logd("begin Anim")
-            oldView.beginAnimation(am) {
-                logd("end Anim")
-                onOldViewAnimEnd(oldView)
-            }
-        }
-        this.resumeAnim?.also { ra ->
-            ra.duration = animDuration
-            curView.beginAnimation(ra) {
-
-            }
-        }
-    }
-
-    fun addPage(page: Page) {
-        if (ownerState == Lifecycle.State.DESTROYED) {
-            error("Activity Already Destroyed! Cannot Push Any Page. " + page::class.qualifiedName)
+    private fun addPage(page: Page, anim: Boolean) {
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
+            return
         }
         if (pageQueue.contains(page)) {
             error("Already Exist Page:" + page::class.qualifiedName)
         }
+        val oldPage = topPage
         pageQueue.add(page)
-        page.lifecycle.addObserver(this.lifeObserver)
         page.onAttach(this)
-        page.currentState = LifeState.INITIALIZED
-        logd("PageAdded:", page.pageName)
-        logd("PageQueue: ", pageQueue.joinToString(",") { it.pageName })
+        if (page.pageView.layoutParams is FrameParams) {
+            frameLayout.addView(page.pageView)
+        } else {
+            frameLayout.addView(page.pageView, FrameParams.MATCH_PARENT, FrameParams.MATCH_PARENT)
+        }
+        val currState = lifecycleOwner.lifecycle.currentState
+        page.currentState = currState
+        oldPage?.currentState = LifeState.CREATED
+        if (anim && oldPage != null && currState.isAtLeast(LifeState.STARTED)) {
+            val eA = animEnter ?: return
+
+            val pA = animPause ?: noChangeAnim
+            pA.duration = animDuration
+            oldPage.pageView.beginAnimation(pA)
+
+            eA.duration = animDuration
+            page.pageView.beginAnimation(eA)
+        }
+    }
+
+    private fun removePage(page: Page, anim: Boolean) {
+        page.pageView.animation?.cancel()
+//        page.lifecycle.removeObserver(lifeObserver)
+        page.currentState = Lifecycle.State.DESTROYED
+        page.onDetach()
+        if (pageQueue.size <= 1 || this.topPage != page) {
+            pageQueue.remove(page)
+            frameLayout.removeView(page.pageView)
+            if (pageQueue.isEmpty()) {
+                onPageQueueEmpty()
+            }
+            return
+        }
+        //p is top page, need anim
+        val newTopPage = pageQueue[pageQueue.size - 2]
+        pageQueue.remove(page)
+        newTopPage.currentState = lifecycleOwner.lifecycle.currentState
+        val la = animLeave
+        if (!anim || la == null || !newTopPage.currentState.isAtLeast(LifeState.STARTED)) {
+            frameLayout.removeView(page.pageView)
+            return
+        }
+        la.duration = animDuration
+        page.pageView.beginAnimation(la) {
+            frameLayout.removeView(page.pageView)
+        }
+        this.animResume?.duration = animDuration
+        newTopPage.pageView.beginAnimation(this.animResume)
+
     }
 
 
     fun pushPage(page: Page) {
-        addPage(page)
-        currentPage = page
+        addPage(page, true)
     }
 
     fun popPage() {
-        val p = pageQueue.lastOrNull() ?: return
+        val p = topPage ?: return
         finishPage(p)
 
     }
 
     fun setContentPage(p: Page) {
-        ignoreAnim = true
         pushPage(p)
         while (pageQueue.size > 1) {
-            finishPage(pageQueue[pageQueue.size - 2])
+            removePage(pageQueue[pageQueue.size - 2], false)
         }
-        ignoreAnim = false
     }
 
     //只保留栈底
     fun popToBottom() {
-        ignoreAnim = true
         while (pageQueue.size > 1) {
-            val p = pageQueue.removeLast()
-            finishPage(p)
+            val p = topPage ?: return
+            removePage(p, false)
         }
-        ignoreAnim = false
     }
 
 
     fun finishAll() {
-        ignoreAnim = true
-        pageQueue.reversed().forEach { p ->
-            finishPage(p)
+        while (pageQueue.isNotEmpty()) {
+            removePage(topPage!!, false)
         }
-        ignoreAnim = false
     }
 
     fun finishPage(p: Page) {
-        p.pageView.animation?.cancel()
-        p.currentState = Lifecycle.State.DESTROYED
-
+        removePage(p, true)
     }
 
     protected open fun onPageQueueEmpty() {
 
     }
 
-
-    protected open fun onCurrentFinished(index: Int): Page? {
-        val n = if (index == pageQueue.size - 1) {
-            pageQueue.size - 2
-        } else {
-            index
-        }
-        if (n >= 0) {
-            return pageQueue[n]
-        }
-        return null
-    }
-
-    protected open fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+    protected open fun onStateChangedEvent(source: LifecycleOwner, event: Lifecycle.Event) {
         logd(source::class.simpleName + " StateChanged:", source.lifecycle.currentState, event)
         if (source === lifecycleOwner) {
             when (event) {
@@ -217,53 +158,26 @@ open class StackContainer(val activity: BaseActivity, private val lifecycleOwner
                     }
                 }
                 Lifecycle.Event.ON_DESTROY -> {
-                    pageQueue.reversed().forEach {
+                    val ls = pageQueue.reversed()
+                    ls.forEach {
                         it.lifecycleRegistry.handleLifecycleEvent(event)
+                    }
+                    ls.forEach {
+                        removePage(it, false)
                     }
                 }
                 Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME, Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    currentPage?.lifecycleRegistry?.handleLifecycleEvent(event)
-                }
-                Lifecycle.Event.ON_ANY -> {
-
-                }
-            }
-        } else if (source is Page) {
-            val p: Page = source
-            when (event) {
-                Lifecycle.Event.ON_CREATE -> {
-                    if (p.pageView.layoutParams is FrameParams) {
-                        frameLayout.addView(p.pageView)
-                    } else {
-                        frameLayout.addView(p.pageView, FrameParams.MATCH_PARENT, FrameParams.MATCH_PARENT)
-                    }
-
-                }
-                Lifecycle.Event.ON_DESTROY -> {
-                    p.lifecycle.removeObserver(lifeObserver)
-                    p.onDetach()
-                    if (p == currentPage) {
-                        val oldIndex = pageQueue.indexOf(p)
-                        val newCurr = onCurrentFinished(oldIndex)
-                        pageQueue.remove(p)
-                        if (currentPage == newCurr) {
-                            frameLayout.removeView(p.pageView)//not reach!
+                    val ls = pageQueue.toList()
+                    ls.forEach { p ->
+                        if (p == topPage) {
+                            p.lifecycleRegistry.handleLifecycleEvent(event)
                         } else {
-                            currentPage = newCurr
-                        }
-                        if (pageQueue.isEmpty()) {
-                            onPageQueueEmpty()
-                        }
-                    } else {
-                        pageQueue.remove(p)
-                        frameLayout.removeView(p.pageView)
-                        if (pageQueue.isEmpty()) {
-                            onPageQueueEmpty()
+                            p.currentState = LifeState.CREATED
                         }
                     }
-
                 }
                 else -> {
+
                 }
             }
         }
@@ -287,11 +201,16 @@ open class StackContainer(val activity: BaseActivity, private val lifecycleOwner
             }
 
         val alphaInAnim: Animation
-            get() = AlphaAnimation(0.3f, 1.0f).apply {
+            get() = AlphaAnimation(0.5f, 1.0f).apply {
                 this.fillBefore = true
             }
         val alphaOutAnim: Animation
-            get() = AlphaAnimation(1f, 0.3f).apply {
+            get() = AlphaAnimation(1f, 0.5f).apply {
+                this.fillBefore = true
+            }
+
+        val noChangeAnim: Animation
+            get() = AlphaAnimation(1f, 1f).apply {
                 this.fillBefore = true
             }
 

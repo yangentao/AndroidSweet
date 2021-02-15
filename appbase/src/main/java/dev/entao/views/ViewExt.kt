@@ -345,20 +345,31 @@ fun <T : View> T.outlineRoundRect(corner: Int): T {
 }
 
 
-fun View.beginAnimation(animation: Animation, onEndCallback: () -> Unit) {
+fun View.beginAnimation(a: Animation?, onEndCallback: () -> Unit) {
     this.animation?.cancel()
-    animation.setAnimationListener(object : Animation.AnimationListener {
-        override fun onAnimationStart(animation: Animation?) {
+    if (a == null) {
+        onEndCallback()
+    } else {
+        a.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {
 
-        }
+            }
 
-        override fun onAnimationEnd(animation: Animation?) {
-            onEndCallback()
-        }
+            override fun onAnimationEnd(animation: Animation?) {
+                onEndCallback()
+            }
 
-        override fun onAnimationRepeat(animation: Animation?) {
-        }
+            override fun onAnimationRepeat(animation: Animation?) {
+            }
 
-    })
-    this.startAnimation(animation)
+        })
+        this.startAnimation(a)
+    }
+}
+
+fun View.beginAnimation(a: Animation?) {
+    this.animation?.cancel()
+    if (a != null) {
+        this.startAnimation(a)
+    }
 }
