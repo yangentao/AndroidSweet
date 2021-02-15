@@ -80,7 +80,6 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
             isClickable = true
             isFocusable = true
             isFocusableInTouchMode = true
-            gone()
             setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
                     activity.hideInputMethod()
@@ -102,29 +101,34 @@ abstract class Page : LifecycleOwner, LifecycleEventObserver {
     }
 
     open fun onCreate(pageView: RelativeLayout) {
-
+        logd("onCreate: ", pageName)
     }
 
     open fun onPageCreated() {}
 
 
     open fun onStart() {
+        logd("onStart: ", pageName)
     }
 
 
     open fun onResume() {
+        logd("onResume: ", pageName)
     }
 
 
     open fun onPause() {
+        logd("onPause: ", pageName)
     }
 
 
     open fun onStop() {
+        logd("onStop: ", pageName)
     }
 
 
     open fun onDestroy() {
+        logd("onDestroy: ", pageName)
     }
 
     open fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {

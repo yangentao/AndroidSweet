@@ -25,14 +25,6 @@ class TestPage2 : LinearPage() {
 
     }
 
-    override fun onPause() {
-        super.onPause()
-        logd("onPause: ", pageName)
-    }
 
-    override fun onStart() {
-        super.onStart()
-        logd("onStart: ", pageName)
-    }
 
 }

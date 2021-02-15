@@ -12,6 +12,8 @@ import androidx.lifecycle.LifecycleOwner
 import dev.entao.log.logd
 import dev.entao.views.FrameParams
 import dev.entao.views.beginAnimation
+import dev.entao.views.gone
+import dev.entao.views.visiable
 
 open class StackContainer(val activity: StackActivity, private val frameLayout: FrameLayout) {
     private val pageQueue: ArrayList<Page> = ArrayList()
@@ -151,37 +153,48 @@ open class StackContainer(val activity: StackActivity, private val frameLayout: 
     }
 
     protected open fun onStateChangedEvent(source: LifecycleOwner, event: Lifecycle.Event) {
-        logd("StackContainer: ", source::class.simpleName + " StateChanged:", source.lifecycle.currentState, event)
+        logd("Stack: Source=", source::class.simpleName + " State=", source.lifecycle.currentState, " Event=", event)
         if (source === lifecycleOwner) {
+            val pages = pageQueue.toList()
             when (event) {
-                Lifecycle.Event.ON_CREATE -> {
-                    pageQueue.forEach {
+                LifeEvent.ON_CREATE -> {
+                    pages.forEach {
                         it.lifecycleRegistry.handleLifecycleEvent(event)
                     }
                 }
-                Lifecycle.Event.ON_DESTROY -> {
-                    val ls = pageQueue.reversed()
-                    ls.forEach {
-                        it.lifecycleRegistry.handleLifecycleEvent(event)
-                    }
-                    ls.forEach {
-                        removePage(it, false)
+                LifeEvent.ON_DESTROY -> {
+                    finishAll()
+                }
+                LifeEvent.ON_START -> {
+                    val tp = topPage
+                    pages.forEach { p ->
+                        if (p == tp) {
+                            p.lifecycleRegistry.handleLifecycleEvent(event)
+                            p.pageView.visiable()
+                        } else {
+                            p.currentState = LifeState.CREATED
+                            p.pageView.gone()
+                        }
                     }
                 }
-                Lifecycle.Event.ON_START, Lifecycle.Event.ON_RESUME, Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    val ls = pageQueue.toList()
-                    ls.forEach { p ->
-                        if (p == topPage) {
+                LifeEvent.ON_STOP -> {
+                    val tp = topPage
+                    pages.forEach { p ->
+                        if (p == tp) {
                             p.lifecycleRegistry.handleLifecycleEvent(event)
                         } else {
                             p.currentState = LifeState.CREATED
                         }
+                        p.pageView.gone()
                     }
                 }
+                LifeEvent.ON_RESUME, LifeEvent.ON_PAUSE -> {
+                    topPage?.lifecycleRegistry?.handleLifecycleEvent(event)
+                }
                 else -> {
-
                 }
             }
+
         }
 
     }
